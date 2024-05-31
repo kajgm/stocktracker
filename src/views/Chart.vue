@@ -1,9 +1,11 @@
-<script setup lang="ts">
-import Ticker from './views/Ticker.vue';
-</script>
+<script setup lang="ts"></script>
 
 <template>
-  <Ticker />
+  <header>
+    <div class="wrapper">
+      <HelloWorld msg="Stock Tracker" />
+    </div>
+  </header>
 </template>
 
 <style scoped>
