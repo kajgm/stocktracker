@@ -2,7 +2,7 @@
 
 describe('Page navigation', () => {
   it('visits the app root url', () => {
-    cy.visit('/')
-    cy.contains('h1', 'Stock Tracker')
-  })
-})
+    cy.visit('/');
+    cy.get('[data-cy="ticker"]').contains('(Coinbase)');
+  });
+});
