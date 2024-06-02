@@ -20,6 +20,7 @@ const subscribeMessage = {
 };
 
 function websocketConnect() {
+  status.value = 'connecting';
   const socket = new WebSocket('wss://ws-feed.exchange.coinbase.com');
 
   socket.onopen = () => {
