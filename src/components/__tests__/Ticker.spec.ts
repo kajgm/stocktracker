@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import Ticker from '@/views/Ticker.vue';
+import App from '@/App.vue';
 
-describe('HelloWorld', () => {
+describe('App', () => {
   it('renders properly', () => {
-    const wrapper = mount(Ticker);
-    expect(wrapper.text()).toContain('(Coinbase)');
+    const wrapper = mount(App);
+    expect(wrapper.text()).toContain('Stock Tracker');
   });
 });

@@ -1,65 +1,47 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { type Status, type TickerType } from '@/types/types';
 
-interface ticker {
-  id: string;
-  price: string;
-  volume: string;
-}
-
-const tickerData = ref({} as ticker);
-
-const subscribeMessage = {
-  type: 'subscribe',
-  product_ids: ['ETH-USD'],
-  channels: [
-    'heartbeat',
-    {
-      name: 'ticker',
-      product_ids: ['ETH-USD']
-    }
-  ]
-};
+const props = defineProps<{
+  tickerData: TickerType;
+  previousData: TickerType;
+  status: Status;
+}>();
 
 const triangleFilter = ref('filterGreen');
 
-const socket = new WebSocket('wss://ws-feed.exchange.coinbase.com');
+const tickData = props.tickerData;
+const prevData = props.previousData;
+const prevFilter = triangleFilter.value;
 
-socket.onopen = () => {
-  socket.send(JSON.stringify(subscribeMessage));
-};
-
-socket.onmessage = (e) => {
-  const msg = JSON.parse(e.data);
-
-  const previousValue = tickerData.value.price;
-  if (msg['type'] == 'ticker') {
-    tickerData.value.id = msg['product_id'];
-    tickerData.value.price = msg['price'];
-    tickerData.value.volume = msg['volume_24h'].split('.')[0];
-  }
-
-  const previousFilter = triangleFilter.value;
-  if (previousValue > msg['price']) {
+onMounted(() => {
+  if (prevData.price > tickData.price) {
     triangleFilter.value = 'filterRed';
-  } else if (previousValue < msg['price']) {
+  } else if (prevData.price < tickData.price) {
     triangleFilter.value = 'filterGreen';
   } else {
-    triangleFilter.value = previousFilter;
+    triangleFilter.value = prevFilter;
   }
-};
+});
 </script>
 
 <template>
   <header>
     <div class="wrapper">
-      <div class="info">
-        <h1 data-cy="ticker">{{ tickerData.id }} (Coinbase)</h1>
+      <div v-if="props.status == 'connecting'" class="info">
+        <h1>ETH-USD</h1>
+        <h1 class="green price">Connecting...</h1>
+      </div>
+      <div v-else-if="props.status == 'connected'" class="info">
+        <h1>{{ props.tickerData.id }} (Coinbase)</h1>
         <div class="value">
           <img src="@/assets/triangle.svg" class="triangle" :class="triangleFilter" />
-          <h1 class="green price">${{ tickerData.price }}</h1>
+          <h1 class="green price">${{ props.tickerData.price }}</h1>
         </div>
-        <h1>Volume: ${{ tickerData.volume }}</h1>
+        <h1>Volume: ${{ props.tickerData.volume }}</h1>
+      </div>
+      <div v-else class="info">
+        <h1>Stock Tracker</h1>
       </div>
     </div>
   </header>
