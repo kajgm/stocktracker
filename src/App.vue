@@ -1,20 +1,22 @@
 <script setup lang="ts">
-import Ticker from './views/Ticker.vue';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import { type Status, type TickerType } from '@/types/types';
+import Ticker from './views/Ticker.vue';
+import Grid from './views/Grid.vue';
+
+const tickers = ['ETH-USD', 'BTC-USD', 'DOGE-USD'];
 
 const status = ref('idle' as Status);
-const socketResponse = ref({} as TickerType);
-const previousResponse = ref({} as TickerType);
+const socketResponse = reactive(new Map<string, TickerType>());
 
 const subscribeMessage = {
   type: 'subscribe',
-  product_ids: ['ETH-USD'],
+  product_ids: tickers,
   channels: [
     'heartbeat',
     {
       name: 'ticker',
-      product_ids: ['ETH-USD']
+      product_ids: tickers
     }
   ]
 };
@@ -35,10 +37,13 @@ function websocketConnect() {
     }
 
     if (msg['type'] == 'ticker') {
-      previousResponse.value = socketResponse.value;
-      socketResponse.value.id = msg['product_id'];
-      socketResponse.value.price = msg['price'];
-      socketResponse.value.volume = msg['volume_24h'].split('.')[0];
+      const tickerValue = {
+        id: msg['product_id'],
+        currentPrice: msg['price'],
+        volume: msg['volume_24h'].split('.')[0],
+        previousPrice: socketResponse.get(msg['product_id'])?.currentPrice
+      } as TickerType;
+      socketResponse.set(msg['product_id'], tickerValue);
     }
   };
 
@@ -62,7 +67,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <Ticker :tickerData="socketResponse" :previousData="previousResponse" :status="status" />
+  <div v-if="tickers.length > 1">
+    <Grid :tickerData="socketResponse" :status="status" />
+  </div>
+  <div v-else>
+    <Ticker :tickerData="socketResponse.entries().next().value" :status="status" />
+  </div>
 </template>
 
 <style scoped>

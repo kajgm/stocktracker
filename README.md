@@ -84,5 +84,5 @@ export DISPLAY=:0
 3. Run chromium in fullscreen mode
 
 ```
-chromium-browser --kiosk http://localhost:8080/ --start-fullscreen
+chromium-browser --app=http://localhost:8080/ --start-fullscreen --incognito
 ```

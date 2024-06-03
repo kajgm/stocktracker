@@ -1,49 +1,42 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import { type Status, type TickerType } from '@/types/types';
 
 const props = defineProps<{
-  tickerData: TickerType[];
-  previousData: TickerType[];
+  tickerData: Map<string, TickerType>;
   status: Status;
 }>();
-
-const triangleFilter = ref('filterGreen');
-
-const tickData = props.tickerData;
-const prevData = props.previousData;
-const prevFilter = triangleFilter.value;
-
-onMounted(() => {
-  // if (prevData.price > tickData.price) {
-  //   triangleFilter.value = 'filterRed';
-  // } else if (prevData.price < tickData.price) {
-  //   triangleFilter.value = 'filterGreen';
-  // } else {
-  //   triangleFilter.value = prevFilter;
-  // }
-});
 </script>
 
 <template>
   <header>
-    <!-- <div class="wrapper">
+    <div class="wrapper">
       <div v-if="props.status == 'connecting'" class="info">
         <h1>ETH-USD</h1>
         <h1 class="green price">Connecting...</h1>
       </div>
       <div v-else-if="props.status == 'connected'" class="info">
-        <h1>{{ props.tickerData.id }} (Coinbase)</h1>
-        <div class="value">
-          <img src="@/assets/triangle.svg" class="triangle" :class="triangleFilter" />
-          <h1 class="green price">${{ props.tickerData.price }}</h1>
+        <div v-for="[id, ticker] in tickerData" :key="id">
+          <h1>{{ ticker.id }} (Coinbase)</h1>
+          <div class="value">
+            <img
+              v-if="ticker.previousPrice < ticker.currentPrice"
+              src="@/assets/triangle.svg"
+              class="triangle greenFilter"
+            />
+            <img
+              v-if="ticker.previousPrice > ticker.currentPrice"
+              src="@/assets/triangle.svg"
+              class="triangle redFilter"
+            />
+            <h1 class="green price">${{ ticker.currentPrice }}</h1>
+          </div>
+          <h1>Volume: ${{ (parseFloat(ticker.volume) * parseFloat(ticker.currentPrice)).toString().split('.')[0] }}</h1>
         </div>
-        <h1>Volume: ${{ props.tickerData.volume }}</h1>
       </div>
       <div v-else class="info">
         <h1>Stock Tracker</h1>
       </div>
-    </div> -->
+    </div>
   </header>
 </template>
 
