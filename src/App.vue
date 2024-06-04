@@ -66,6 +66,7 @@ function websocketConnect() {
     console.log(e);
     setTimeout(() => {
       status.value = 'connecting';
+      websocketConnect(); // Reconnect
     }, 60000);
   };
 
