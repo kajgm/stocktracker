@@ -52,15 +52,16 @@ To deploy within Docker, please follow these steps
 
 1. Install [Docker Engine](https://docs.docker.com/engine/install/)
 2. Build the dockerfile
+   > Tip: Run `sudo usermod -aG docker <user>` to avoid prefixing the following commands with sudo
 
 ```
-docker build -t <tag_name>/stocktracker .
+docker build -t kajgr/stocktracker .
 ```
 
 3. Run the dockerfile
 
 ```
-docker run -d -p 8080:80 --name stock-tracker-1 <tag_name>/stocktracker
+docker run -d -p 8080:80 --name stock-tracker-1 kajgr/stocktracker
 ```
 
 ## Deployment on Raspberry Pi
@@ -85,4 +86,13 @@ export DISPLAY=:0
 
 ```
 chromium-browser --app=http://localhost:8080/ --start-fullscreen --incognito
+```
+
+### Troubleshooting
+
+- To prevent the screen from going to sleep, use the command (may have to use `export DISPLAY=:0` beforehand):
+
+```
+xset s 0
+xset -dpms
 ```
