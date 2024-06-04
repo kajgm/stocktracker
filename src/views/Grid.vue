@@ -11,26 +11,16 @@ const props = defineProps<{
   <header>
     <div class="wrapper">
       <div v-if="props.status == 'connecting'" class="info">
-        <h1>ETH-USD</h1>
-        <h1 class="green price">Connecting...</h1>
+        <h1>Connecting...</h1>
       </div>
       <div v-else-if="props.status == 'connected'" class="info">
         <div v-for="[id, ticker] in tickerData" :key="id">
-          <h1>{{ ticker.id }} (Coinbase)</h1>
+          <h1>{{ ticker.id }}</h1>
           <div class="value">
-            <img
-              v-if="ticker.previousPrice < ticker.currentPrice"
-              src="@/assets/triangle.svg"
-              class="triangle greenFilter"
-            />
-            <img
-              v-if="ticker.previousPrice > ticker.currentPrice"
-              src="@/assets/triangle.svg"
-              class="triangle redFilter"
-            />
-            <h1 class="green price">${{ ticker.currentPrice }}</h1>
+            <img src="@/assets/triangle.svg" class="triangle" :class="ticker.dirFilter" />
+            <h1 class="green price">${{ ticker.curPrice }}</h1>
           </div>
-          <h1>Volume: ${{ (parseFloat(ticker.volume) * parseFloat(ticker.currentPrice)).toString().split('.')[0] }}</h1>
+          <h1>Volume: ${{ (parseFloat(ticker.volume) * parseFloat(ticker.curPrice)).toString().split('.')[0] }}</h1>
         </div>
       </div>
       <div v-else class="info">

@@ -1,8 +1,9 @@
 export interface TickerType {
   id: string;
-  currentPrice: string;
+  curPrice: string;
   volume: string;
-  previousPrice: string;
+  prevPrice: string;
+  dirFilter: string;
 }
 
 export type Status = 'connected' | 'connecting' | 'error' | 'idle';
