@@ -4,7 +4,7 @@ A minimal tracker for Stocks and Cryptocurrencies. Intended for use on external 
 
 ## Developed With
 
-- [Node 18.18.0](https://nodejs.org/en)
+- [Node](https://nodejs.org/)
 - [Vue](https://vuejs.org/)
 - [Vite](https://vitejs.dev/)
 
@@ -86,6 +86,12 @@ export DISPLAY=:0
 
 ```
 chromium-browser --app=http://localhost:8080/ --start-fullscreen --incognito
+```
+
+Alternatively, you may have to append `nohup` and `&` to run the command in the background (if executing via ssh):
+
+```
+nohup chromium-browser --app=http://localhost:8080/ --start-fullscreen --incognito &
 ```
 
 ### Troubleshooting
