@@ -1,28 +1,27 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue';
-import { type Status, type TickerType } from '@/types/types';
+import { type StatusType, type TickerType } from '@/types/types';
 import Ticker from './views/Ticker.vue';
 import Grid from './views/Grid.vue';
+import axios from 'axios';
 
-const defaultTicker = { prevPrice: '0', dirFilter: 'greenFilter' } as TickerType;
+// Limited to 250 requests per day
+// (24hr * 60min * 60sec * 1000ms) / 250 requests
+// Called every ~5.5min, rounded up to account for testing/error
+const API_TIMEOUT = 346000;
+
+const cryptoURL = 'wss://ws-feed.exchange.coinbase.com';
+const stockURL = 'https://financialmodelingprep.com/api/v3/quote/';
 
 const cryptoTickers = ['ETH-USD', 'BTC-USD'];
-const stockTickers = ['V', 'TSM'];
+const stockTickers = ['AAPL', 'MSFT'];
 
-const status = ref('idle' as Status);
-const socketResponse = reactive(new Map<string, TickerType>());
+const defaultTicker = { prevPrice: '0', dirFilter: 'greenFilter', status: 'connecting' } as TickerType;
 
-const cryptoSubscribeMessage = {
-  type: 'subscribe',
-  product_ids: cryptoTickers,
-  channels: [
-    'heartbeat',
-    {
-      name: 'ticker',
-      product_ids: cryptoTickers
-    }
-  ]
-};
+const sktStatus = ref('connecting' as StatusType);
+const tickerResponse = reactive(
+  new Map<string, TickerType>(cryptoTickers.concat(stockTickers).map((e) => [e, defaultTicker]))
+);
 
 function priceDirection(currentdirection: string, currentPrice: string, previousPrice: string) {
   if (previousPrice > currentPrice) {
@@ -34,60 +33,105 @@ function priceDirection(currentdirection: string, currentPrice: string, previous
   return currentdirection;
 }
 
-function websocketConnect() {
-  status.value = 'connecting';
-  const socket = new WebSocket('wss://ws-feed.exchange.coinbase.com');
+const cryptoSubMsg = {
+  type: 'subscribe',
+  product_ids: cryptoTickers,
+  channels: [
+    'heartbeat',
+    {
+      name: 'ticker',
+      product_ids: cryptoTickers
+    }
+  ]
+};
+
+const cryptoMsgFn = (e: MessageEvent<any>) => {
+  sktStatus.value = 'connected';
+
+  const msg = JSON.parse(e.data);
+  if (msg['type'] == 'ticker') {
+    const prevRes = tickerResponse.get(msg['product_id']) || defaultTicker;
+    const tickerValue = {
+      id: msg['product_id'],
+      curPrice: msg['price'],
+      volume: msg['volume_24h'].split('.')[0],
+      prevPrice: prevRes.curPrice,
+      dirFilter: priceDirection(prevRes.dirFilter, prevRes.curPrice, prevRes.prevPrice),
+      status: 'connected'
+    } as TickerType;
+    tickerResponse.set(msg['product_id'], tickerValue);
+  }
+};
+
+function websocketConnect(endpoint: string, subMsg: any, msgFn: (e: MessageEvent<any>) => void, loginMsg?: any) {
+  sktStatus.value = 'connecting';
+  const socket = new WebSocket(endpoint);
 
   socket.onopen = () => {
-    socket.send(JSON.stringify(cryptoSubscribeMessage));
+    if (loginMsg) {
+      console.log(import.meta.env.VITE_VUE_APP_FMP_KEY);
+      socket.send(JSON.stringify(loginMsg));
+      console.log('logged in');
+    }
+    socket.send(JSON.stringify(subMsg));
   };
 
-  socket.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-
-    if (status.value != 'connected') {
-      status.value = 'connected';
-    }
-
-    if (msg['type'] == 'ticker') {
-      const prevRes = socketResponse.get(msg['product_id']) || defaultTicker;
-      const tickerValue = {
-        id: msg['product_id'],
-        curPrice: msg['price'],
-        volume: msg['volume_24h'].split('.')[0],
-        prevPrice: prevRes.curPrice,
-        dirFilter: priceDirection(prevRes.dirFilter, prevRes.curPrice, prevRes.prevPrice)
-      } as TickerType;
-      socketResponse.set(msg['product_id'], tickerValue);
-    }
-  };
+  socket.onmessage = msgFn;
 
   socket.onclose = (e) => {
     console.log(e);
     setTimeout(() => {
-      status.value = 'connecting';
-      websocketConnect(); // Reconnect
+      sktStatus.value = 'connecting';
+      websocketConnect(endpoint, subMsg, msgFn); // Reconnect
     }, 60000);
   };
 
   socket.onerror = (err) => {
     console.log(err);
-    status.value = 'error';
+    sktStatus.value = 'error';
     socket.close();
   };
 }
 
+function restApiPoll() {
+  // axios
+  //   .get(stockURL + stockTickers.toString() + '?apikey=' + import.meta.env.VITE_VUE_APP_FMP_KEY)
+  //   .then((res) => {
+  //     const prevRes = tickerResponse.get(res.data.symbol) || defaultTicker;
+  //     for (let i = 0; i < res.data.length; i++) {
+  //       const stock = {
+  //         id: res.data[i].symbol,
+  //         curPrice: res.data[i].price,
+  //         volume: res.data[i].volume,
+  //         prevPrice: prevRes.curPrice,
+  //         dirFilter: priceDirection(prevRes.dirFilter, prevRes.curPrice, prevRes.prevPrice)
+  //       } as TickerType;
+  //       tickerResponse.set(res.data[i].symbol, stock);
+  //     }
+  //   })
+  //   .catch((error) => {
+  //     console.log(error);
+  //   })
+  //   .finally(() => {
+  //     // need to add updates to the connecting status here
+  //   });
+  console.log('called api!');
+  setTimeout(restApiPoll, API_TIMEOUT);
+}
+
 onMounted(() => {
-  websocketConnect();
+  console.log(tickerResponse);
+  websocketConnect(cryptoURL, cryptoSubMsg, cryptoMsgFn);
+  restApiPoll();
 });
 </script>
 
 <template>
   <div v-if="cryptoTickers.length + stockTickers.length > 1">
-    <Grid :tickerData="socketResponse" :status="status" />
+    <Grid :tickerData="tickerResponse" :socketStatus="sktStatus" />
   </div>
   <div v-else>
-    <Ticker :tickerData="socketResponse.entries().next().value" :status="status" />
+    <Ticker :tickerData="tickerResponse.entries().next().value" :socketStatus="sktStatus" />
   </div>
 </template>
 

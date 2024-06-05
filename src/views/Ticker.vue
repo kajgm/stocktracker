@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { type Status, type TickerType } from '@/types/types';
+import { type StatusType, type TickerType } from '@/types/types';
 
 const props = defineProps<{
   tickerData: TickerType;
-  status: Status;
+  socketStatus: StatusType;
 }>();
 
 const ticker = props.tickerData;
@@ -12,10 +12,10 @@ const ticker = props.tickerData;
 <template>
   <header>
     <div class="wrapper">
-      <div v-if="props.status == 'connecting'" class="info">
+      <div v-if="props.socketStatus == 'connecting'" class="info">
         <h1>Connecting...</h1>
       </div>
-      <div v-else-if="props.status == 'connected'" class="info">
+      <div v-else-if="props.socketStatus == 'connected'" class="info">
         <h1>{{ ticker.id }}</h1>
         <div class="value">
           <img src="@/assets/triangle.svg" class="triangle" :class="ticker.dirFilter" />
@@ -23,7 +23,7 @@ const ticker = props.tickerData;
             ${{ (parseFloat(ticker.volume) * parseFloat(ticker.curPrice)).toString().split('.')[0] }}
           </h1>
         </div>
-        <h1>Volume: ${{ ticker.volume }}</h1>
+        <h1>Volume: {{ ticker.volume }}</h1>
       </div>
       <div v-else class="info">
         <h1>Stock Tracker</h1>

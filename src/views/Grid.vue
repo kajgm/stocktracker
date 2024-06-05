@@ -1,26 +1,31 @@
 <script setup lang="ts">
-import { type Status, type TickerType } from '@/types/types';
+import { type StatusType, type TickerType } from '@/types/types';
 
 const props = defineProps<{
   tickerData: Map<string, TickerType>;
-  status: Status;
+  socketStatus: StatusType;
 }>();
 </script>
 
 <template>
   <header>
     <div class="wrapper">
-      <div v-if="props.status == 'connecting'" class="info">
+      <div v-if="props.socketStatus == 'connecting'" class="info">
         <h1>Connecting...</h1>
       </div>
-      <div v-else-if="props.status == 'connected'" class="info">
+      <div v-else-if="props.socketStatus == 'connected'" class="info">
         <div v-for="[id, ticker] in tickerData" :key="id">
           <h1>{{ ticker.id }}</h1>
-          <div class="value">
-            <img src="@/assets/triangle.svg" class="triangle" :class="ticker.dirFilter" />
-            <h1 class="green price">${{ ticker.curPrice }}</h1>
+          <div v-if="ticker.status == 'connecting'" class="info">
+            <h1>Connecting...</h1>
           </div>
-          <h1>Volume: ${{ (parseFloat(ticker.volume) * parseFloat(ticker.curPrice)).toString().split('.')[0] }}</h1>
+          <div v-else>
+            <div class="value">
+              <img src="@/assets/triangle.svg" class="triangle" :class="ticker.dirFilter" />
+              <h1 class="green price">${{ ticker.curPrice }}</h1>
+            </div>
+            <h1>Volume: {{ ticker.volume }}</h1>
+          </div>
         </div>
       </div>
       <div v-else class="info">

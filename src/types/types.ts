@@ -4,6 +4,7 @@ export interface TickerType {
   volume: string;
   prevPrice: string;
   dirFilter: string;
+  status: StatusType;
 }
 
-export type Status = 'connected' | 'connecting' | 'error' | 'idle';
+export type StatusType = 'connected' | 'connecting' | 'error' | 'idle';
