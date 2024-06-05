@@ -8,31 +8,26 @@ const props = defineProps<{
 </script>
 
 <template>
-  <header>
-    <div class="wrapper">
-      <div v-if="props.socketStatus == 'connecting'" class="info">
-        <h1>Connecting...</h1>
-      </div>
-      <div v-else-if="props.socketStatus == 'connected'" class="info">
-        <div v-for="[id, ticker] in tickerData" :key="id">
-          <h1>{{ ticker.id }}</h1>
-          <div v-if="ticker.status == 'connecting'" class="info">
-            <h1>Connecting...</h1>
+  <div class="wrapper">
+    <div v-if="props.socketStatus == 'connecting'" class="info">
+      <h1>Connecting...</h1>
+    </div>
+    <div v-else-if="props.socketStatus == 'connected'" class="info">
+      <div v-for="[id, ticker] in tickerData" :key="id" class="ticker">
+        <h1>{{ ticker.id }}</h1>
+        <div v-if="ticker.status == 'connecting'">
+          <h1>Connecting...</h1>
+        </div>
+        <div v-else>
+          <div class="value">
+            <img src="@/assets/triangle.svg" class="triangle" :class="ticker.dirFilter" />
+            <h1 class="green price">${{ ticker.curPrice }}</h1>
           </div>
-          <div v-else>
-            <div class="value">
-              <img src="@/assets/triangle.svg" class="triangle" :class="ticker.dirFilter" />
-              <h1 class="green price">${{ ticker.curPrice }}</h1>
-            </div>
-            <h1>Volume: {{ ticker.volume }}</h1>
-          </div>
+          <h1>Vol: {{ ticker.volume }}</h1>
         </div>
       </div>
-      <div v-else class="info">
-        <h1>Stock Tracker</h1>
-      </div>
     </div>
-  </header>
+  </div>
 </template>
 
 <style scoped>
@@ -42,11 +37,19 @@ header {
 
 .info {
   text-align: center;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 10px;
+}
+
+.ticker {
+  min-width: 220px;
+  max-width: 220px;
 }
 
 h1 {
   font-weight: 500;
-  font-size: 2.6rem;
+  font-size: 1.5rem;
   position: relative;
   top: -10px;
 }
@@ -62,7 +65,7 @@ h3 {
 }
 
 .triangle {
-  height: 30px;
+  height: 15px;
   width: auto;
   position: relative;
   top: -7px;
@@ -86,6 +89,19 @@ h3 {
 
   .info {
     text-align: left;
+  }
+
+  .ticker {
+    max-width: 300px;
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 2.6rem;
+  }
+
+  .triangle {
+    height: 30px;
   }
 }
 </style>

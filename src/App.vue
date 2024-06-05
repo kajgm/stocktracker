@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue';
 import { type StatusType, type TickerType } from '@/types/types';
-import Ticker from './views/Ticker.vue';
 import Grid from './views/Grid.vue';
 import axios from 'axios';
 
@@ -13,8 +12,8 @@ const API_TIMEOUT = 346000;
 const cryptoURL = 'wss://ws-feed.exchange.coinbase.com';
 const stockURL = 'https://financialmodelingprep.com/api/v3/quote/';
 
-const cryptoTickers = ['ETH-USD', 'BTC-USD'];
-const stockTickers = ['AAPL', 'MSFT'];
+const cryptoTickers = ['ETH-USD', 'BTC-USD'] as string[];
+const stockTickers = ['AAPL', 'MSFT'] as string[];
 
 const defaultTicker = { prevPrice: '0', dirFilter: 'greenFilter', status: 'connecting' } as TickerType;
 
@@ -97,8 +96,8 @@ function restApiPoll() {
   // axios
   //   .get(stockURL + stockTickers.toString() + '?apikey=' + import.meta.env.VITE_VUE_APP_FMP_KEY)
   //   .then((res) => {
-  //     const prevRes = tickerResponse.get(res.data.symbol) || defaultTicker;
   //     for (let i = 0; i < res.data.length; i++) {
+  //     const prevRes = tickerResponse.get(res.data[i].symbol) || defaultTicker;
   //       const stock = {
   //         id: res.data[i].symbol,
   //         curPrice: res.data[i].price,
@@ -115,24 +114,83 @@ function restApiPoll() {
   //   .finally(() => {
   //     // need to add updates to the connecting status here
   //   });
+
+  const res = [
+    {
+      symbol: 'AAPL',
+      name: 'Apple Inc.',
+      price: 195.9797,
+      changesPercentage: 0.8385,
+      change: 1.6297,
+      dayLow: 194.88,
+      dayHigh: 196.9,
+      yearHigh: 199.62,
+      yearLow: 164.08,
+      marketCap: 3005172317770,
+      priceAvg50: 178.0664,
+      priceAvg200: 181.4276,
+      exchange: 'NASDAQ',
+      volume: '28673753',
+      avgVolume: 61275561,
+      open: 195.4,
+      previousClose: 194.35,
+      eps: 6.43,
+      pe: 30.48,
+      earningsAnnouncement: '2024-08-01T10:59:00.000+0000',
+      sharesOutstanding: 15334100000,
+      timestamp: 1717608650
+    },
+    {
+      symbol: 'MSFT',
+      name: 'Microsoft Corporation',
+      price: '422.86',
+      changesPercentage: 1.6319,
+      change: 6.79,
+      dayLow: 416.3,
+      dayHigh: 423.35,
+      yearHigh: 433.6,
+      yearLow: 309.45,
+      marketCap: 3142826606600,
+      priceAvg50: 415.8776,
+      priceAvg200: 379.92606,
+      exchange: 'NASDAQ',
+      volume: '7661534',
+      avgVolume: 19836049,
+      open: 417.81,
+      previousClose: 416.07,
+      eps: 11.53,
+      pe: 36.67,
+      earningsAnnouncement: '2024-07-23T10:59:00.000+0000',
+      sharesOutstanding: 7432310000,
+      timestamp: 1717608651
+    }
+  ];
+
+  for (let i = 0; i < res.length; i++) {
+    const prevRes = tickerResponse.get(res[i].symbol) || defaultTicker;
+    const stock = {
+      id: res[i].symbol,
+      curPrice: res[i].price.toLocaleString('en', { minimumFractionDigits: 2 }),
+      volume: res[i].volume,
+      prevPrice: prevRes.curPrice,
+      dirFilter: priceDirection(prevRes.dirFilter, prevRes.curPrice, prevRes.prevPrice),
+      status: 'connected'
+    } as TickerType;
+    tickerResponse.set(res[i].symbol, stock);
+  }
+
   console.log('called api!');
   setTimeout(restApiPoll, API_TIMEOUT);
 }
 
 onMounted(() => {
-  console.log(tickerResponse);
   websocketConnect(cryptoURL, cryptoSubMsg, cryptoMsgFn);
   restApiPoll();
 });
 </script>
 
 <template>
-  <div v-if="cryptoTickers.length + stockTickers.length > 1">
-    <Grid :tickerData="tickerResponse" :socketStatus="sktStatus" />
-  </div>
-  <div v-else>
-    <Ticker :tickerData="tickerResponse.entries().next().value" :socketStatus="sktStatus" />
-  </div>
+  <Grid :tickerData="tickerResponse" :socketStatus="sktStatus" />
 </template>
 
 <style scoped>
