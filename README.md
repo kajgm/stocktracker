@@ -10,14 +10,26 @@ A minimal tracker for Stocks and Cryptocurrencies. Intended for use on external 
 
 ## Prerequisites
 
-Please ensure the following software is installed on your system:
+1. Please ensure the following software is installed on your system:
 
 - [Node 18.x](https://nodejs.org/en/download)
 
+2. (Optional) To display exchange-traded stock tickers (AAPL, MSFT, etc.), create a Finanical Modeling Prep API key
+
+- [https://site.financialmodelingprep.com/](https://site.financialmodelingprep.com/)
+
 ## Project Setup
+
+### Install dependencies
 
 ```sh
 npm install
+```
+
+### (Optional) Create a `.env` file and add your Financial Modeling Prep API key
+
+```
+VITE_VUE_APP_FMP_KEY="your_api_key"
 ```
 
 ### Compile and Hot-Reload for Development

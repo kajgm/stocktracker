@@ -3,20 +3,23 @@ import { type StatusType, type TickerType } from '@/types/types';
 
 const props = defineProps<{
   tickerData: Map<string, TickerType>;
-  socketStatus: StatusType;
+  dataStatus: StatusType;
 }>();
 </script>
 
 <template>
   <div class="wrapper">
-    <div v-if="props.socketStatus == 'CONNECTING'" class="info">
+    <div v-if="props.dataStatus == 'CONNECTING'" class="info">
       <h1>Connecting...</h1>
     </div>
-    <div v-else-if="props.socketStatus == 'CONNECTED'" class="info">
+    <div v-else-if="props.dataStatus == 'CONNECTED'" class="info">
       <div v-for="[id, ticker] in tickerData" :key="id" class="ticker">
         <h1>{{ ticker.id }}</h1>
         <div v-if="ticker.status == 'CONNECTING'">
           <h1>Connecting...</h1>
+        </div>
+        <div v-else-if="ticker.status == 'ERROR'">
+          <h1>Error</h1>
         </div>
         <div v-else>
           <div class="value">

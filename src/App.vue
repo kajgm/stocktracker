@@ -8,6 +8,8 @@ import Grid from './views/Grid.vue';
 
 const sktStatus = ref('CONNECTING' as StatusType);
 const apiStatus = ref('CONNECTING' as StatusType);
+const dataStatus = ref('CONNECTING' as StatusType);
+
 const tickerResponse = reactive(
   new Map<string, TickerType>(CRYPTO_TICKERS.concat(STOCK_TICKERS).map((e: string) => [e, DEFAULT_TICKER]))
 );
@@ -18,13 +20,20 @@ onMounted(() => {
   sktStatus.value = 'CONNECTED';
 
   // Financial Modeling Prep api polling
-  restApiPoll(apiStatus, tickerResponse);
-  apiStatus.value = 'CONNECTED';
+  if (import.meta.env.VITE_VUE_APP_FMP_KEY) {
+    restApiPoll(apiStatus, tickerResponse);
+    apiStatus.value = 'CONNECTED';
+  } else {
+    console.log('.env file with api key not created!');
+    apiStatus.value = 'ERROR';
+  }
+
+  dataStatus.value = 'CONNECTED';
 });
 </script>
 
 <template>
-  <Grid :tickerData="tickerResponse" :socketStatus="sktStatus" />
+  <Grid :tickerData="tickerResponse" :dataStatus="dataStatus" />
 </template>
 
 <style scoped>
