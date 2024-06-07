@@ -1,4 +1,6 @@
-export interface TickerType {
+export type TickerType = 'STOCK' | 'CRYPTO';
+
+export interface TickerData {
   id: string;
   curPrice: number;
   volume: number;
@@ -7,4 +9,4 @@ export interface TickerType {
   status: StatusType;
 }
 
-export type StatusType = 'CONNECTED' | 'CONNECTING' | 'ERROR' | 'IDLE';
+export type StatusType = 'CONNECTED' | 'CONNECTING' | 'ERROR';

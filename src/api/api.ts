@@ -1,22 +1,23 @@
 import axios from 'axios';
-import { type Ref } from 'vue';
-import { type StatusType, type TickerType } from '@/types/types';
-import { API_TIMEOUT, DEFAULT_TICKER, STOCK_ENDPOINT, STOCK_TICKERS } from '@/defaults/defaults';
+import { type TickerData } from '@/types/types';
+import { useTickerStore } from '@/store/ticker';
 import { priceDirection } from '@/helpers/helpers';
+import { API_TIMEOUT, STOCK_ENDPOINT, STOCK_TICKERS } from '@/defaults/defaults';
 
 const openHours = 9 * 60 + 30;
 const closeHours = 16 * 60;
 
-export function restApiPoll(apiStatus: Ref<StatusType>, tickerResponse: Map<string, TickerType>) {
+export function restApiPoll() {
+  const tickerStore = useTickerStore();
   const date = new Date();
   const currentTime = (date.getUTCHours() - 4) * 60 + date.getUTCMinutes();
 
-  if ((openHours <= currentTime && currentTime <= closeHours) || apiStatus.value != 'CONNECTED') {
+  if ((openHours <= currentTime && currentTime <= closeHours) || tickerStore.apiStatus != 'CONNECTED') {
     axios
       .get(STOCK_ENDPOINT + STOCK_TICKERS.toString() + '?apikey=' + import.meta.env.VITE_VUE_APP_FMP_KEY)
       .then((res) => {
         for (let i = 0; i < res.data.length; i++) {
-          const prevRes = tickerResponse.get(res.data[i].symbol) || DEFAULT_TICKER;
+          const prevRes = tickerStore.tickerValue(res.data[i].symbol);
           const stock = {
             id: res.data[i].symbol,
             curPrice: parseFloat(res.data[i].price),
@@ -24,16 +25,16 @@ export function restApiPoll(apiStatus: Ref<StatusType>, tickerResponse: Map<stri
             prevPrice: prevRes.curPrice,
             dirFilter: priceDirection(prevRes.dirFilter, res.data[i].price, prevRes.prevPrice),
             status: 'CONNECTED'
-          } as TickerType;
-          tickerResponse.set(res.data[i].symbol, stock);
+          } as TickerData;
+          tickerStore.updateTickerData(res.data[i].symbol, stock);
         }
       })
       .catch((error) => {
         console.log(error);
-        apiStatus.value = 'ERROR';
+        tickerStore.setApiStatus('ERROR');
       })
       .finally(() => {
-        apiStatus.value = 'CONNECTED';
+        tickerStore.setApiStatus('CONNECTED');
       });
     console.log('Called FMP api');
   } else {

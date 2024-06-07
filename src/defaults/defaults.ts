@@ -1,4 +1,4 @@
-import { type TickerType } from '@/types/types';
+import { type TickerData } from '@/types/types';
 
 // Limited to 250 requests per day
 // Standard trading day is open 6.5 hours
@@ -13,4 +13,4 @@ export const STOCK_ENDPOINT = 'https://financialmodelingprep.com/api/v3/quote/';
 export const CRYPTO_TICKERS = ['ETH-USD', 'BTC-USD'] as string[];
 export const STOCK_TICKERS = ['AAPL', 'MSFT'] as string[];
 
-export const DEFAULT_TICKER = { prevPrice: 0, dirFilter: 'greenFilter', status: 'CONNECTING' } as TickerType;
+export const DEFAULT_TICKER = { prevPrice: 0, dirFilter: 'greenFilter', status: 'CONNECTING' } as TickerData;

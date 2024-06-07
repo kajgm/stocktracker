@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import { type StatusType, type TickerType } from '@/types/types';
+import { useTickerStore } from '@/store/ticker';
 
-const props = defineProps<{
-  tickerData: Map<string, TickerType>;
-  dataStatus: StatusType;
-}>();
+const tickerStore = useTickerStore();
 </script>
 
 <template>
   <div class="wrapper">
-    <div v-if="props.dataStatus == 'CONNECTING'" class="info">
+    <div v-if="tickerStore.status.overall == 'CONNECTING'" class="info">
       <h1>Connecting...</h1>
     </div>
-    <div v-else-if="props.dataStatus == 'CONNECTED'" class="info">
-      <div v-for="[id, ticker] in tickerData" :key="id" class="ticker">
+    <div v-else-if="tickerStore.status.overall == 'CONNECTED'" class="info">
+      <div v-for="[id, ticker] in tickerStore.tickerData" :key="id" class="ticker">
         <h1>{{ ticker.id }}</h1>
         <div v-if="ticker.status == 'CONNECTING'">
           <h1>Connecting...</h1>
