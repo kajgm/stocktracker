@@ -100,7 +100,7 @@ export DISPLAY=:0
 chromium-browser --app=http://localhost:8080/ --start-fullscreen --incognito
 ```
 
-Alternatively, you may have to append `nohup` and `&` to run the command in the background (if executing via ssh):
+> Alternatively, you may have to append `nohup` and `&` to run the command in the background (if executing via ssh):
 
 ```
 nohup chromium-browser --app=http://localhost:8080/ --start-fullscreen --incognito &
