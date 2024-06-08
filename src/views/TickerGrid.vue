@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useTickerStore } from '@/store/ticker';
+import { concatNumber } from '@/helpers/helpers';
 
 const tickerStore = useTickerStore();
 </script>
@@ -25,9 +26,11 @@ const tickerStore = useTickerStore();
                 d="M29.462 15.707a3.004 3.004 0 0 1-1.474 2.583L6.479 30.999c-.47.275-.998.417-1.526.417a2.98 2.98 0 0 1-1.487-.396 2.997 2.997 0 0 1-1.513-2.604V2.998A3.002 3.002 0 0 1 6.479.415l21.509 12.709a2.997 2.997 0 0 1 1.474 2.583z"
               />
             </svg>
-            <h1 class="text-emerald-500 font-medium text-4xl py-2 px-1">${{ ticker.curPrice }}</h1>
+            <h1 class="text-emerald-500 font-medium text-4xl py-2 px-1">
+              ${{ concatNumber(ticker.curPrice, 2, true, false) }}
+            </h1>
           </div>
-          <h1 class="font-medium text-3xl">Vol: {{ ticker.volume }}</h1>
+          <h1 class="font-medium text-3xl">Vol: {{ concatNumber(ticker.volume, 2, false, true) }}</h1>
         </div>
       </div>
     </div>

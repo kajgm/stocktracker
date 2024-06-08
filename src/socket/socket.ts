@@ -1,6 +1,6 @@
 import { useTickerStore } from '@/store/ticker';
 import { type StatusType, type TickerData } from '@/types/types';
-import { priceDirection, concatVol } from '@/helpers/helpers';
+import { priceDirection } from '@/helpers/helpers';
 import { CRYPTO_ENDPOINT } from '@/defaults/defaults';
 
 export function websocketConnect() {
@@ -31,9 +31,9 @@ export function websocketConnect() {
     if (msg['type'] == 'ticker') {
       const prevRes = tickerStore.tickerValue(msg['product_id']);
       const tickerValue = {
-        id: msg['product_id'],
-        curPrice: parseFloat(msg['price']),
-        volume: concatVol(parseInt(msg['volume_24h'])),
+        id: msg['product_id'] as string,
+        curPrice: msg['price'] as number,
+        volume: msg['volume_24h'] as number,
         prevPrice: prevRes.curPrice,
         dirFilter: priceDirection(prevRes.dirFilter, msg['price'], prevRes.prevPrice),
         status: 'CONNECTED'

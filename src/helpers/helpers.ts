@@ -8,7 +8,7 @@ export function priceDirection(currentdirection: string, currentPrice: number, p
 }
 
 //Credit to: https://stackoverflow.com/a/9462382
-export function concatVol(volume: number): string {
+export function concatNumber(num: number, digits: number, extraPrecise?: Boolean, ignoreTrailing?: boolean): string {
   const lookup = [
     { value: 1, symbol: '' },
     { value: 1e3, symbol: 'k' },
@@ -19,9 +19,16 @@ export function concatVol(volume: number): string {
     { value: 1e18, symbol: 'E' }
   ];
   const regexp = /\.0+$|(?<=\.[0-9]*[1-9])0+$/;
+
   const item = lookup
     .slice()
     .reverse()
-    .find((item) => volume >= item.value);
-  return item ? (volume / item.value).toFixed(1).replace(regexp, '').concat(item.symbol) : '0';
+    .find((item) => num >= item.value && (extraPrecise ? num / item.value > 99 || item.value == 1 : true));
+  if (item) {
+    return ignoreTrailing
+      ? (num / item.value).toFixed(digits).replace(regexp, '').concat(item.symbol)
+      : (num / item.value).toFixed(digits).concat(item.symbol);
+  } else {
+    return '0';
+  }
 }
