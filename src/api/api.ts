@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { type TickerData } from '@/types/types';
 import { useTickerStore } from '@/store/ticker';
-import { priceDirection } from '@/helpers/helpers';
-import { API_TIMEOUT, STOCK_ENDPOINT, STOCK_TICKERS } from '@/defaults/defaults';
+import { priceDirection, concatVol } from '@/helpers/helpers';
+import { API_TIMEOUT, STOCK_ENDPOINT } from '@/defaults/defaults';
 
 const openHours = 9 * 60 + 30;
 const closeHours = 16 * 60;
@@ -14,14 +14,14 @@ export function restApiPoll() {
 
   if ((openHours <= currentTime && currentTime <= closeHours) || tickerStore.apiStatus != 'CONNECTED') {
     axios
-      .get(STOCK_ENDPOINT + STOCK_TICKERS.toString() + '?apikey=' + import.meta.env.VITE_VUE_APP_FMP_KEY)
+      .get(STOCK_ENDPOINT + tickerStore.stockTickers.toString() + '?apikey=' + import.meta.env.VITE_VUE_APP_FMP_KEY)
       .then((res) => {
         for (let i = 0; i < res.data.length; i++) {
           const prevRes = tickerStore.tickerValue(res.data[i].symbol);
           const stock = {
             id: res.data[i].symbol,
             curPrice: parseFloat(res.data[i].price),
-            volume: parseInt(res.data[i].volume),
+            volume: concatVol(parseInt(res.data[i].volume)),
             prevPrice: prevRes.curPrice,
             dirFilter: priceDirection(prevRes.dirFilter, res.data[i].price, prevRes.prevPrice),
             status: 'CONNECTED'

@@ -1,7 +1,7 @@
-import { type StatusType, type TickerData } from '@/types/types';
-import { CRYPTO_TICKERS, CRYPTO_ENDPOINT } from '@/defaults/defaults';
-import { priceDirection } from '@/helpers/helpers';
 import { useTickerStore } from '@/store/ticker';
+import { type StatusType, type TickerData } from '@/types/types';
+import { priceDirection, concatVol } from '@/helpers/helpers';
+import { CRYPTO_ENDPOINT } from '@/defaults/defaults';
 
 export function websocketConnect() {
   const tickerStore = useTickerStore();
@@ -13,12 +13,12 @@ export function websocketConnect() {
     socket.send(
       JSON.stringify({
         type: 'subscribe',
-        product_ids: CRYPTO_TICKERS,
+        product_ids: tickerStore.cryptoTickers,
         channels: [
           'heartbeat',
           {
             name: 'ticker',
-            product_ids: CRYPTO_TICKERS
+            product_ids: tickerStore.cryptoTickers
           }
         ]
       })
@@ -33,7 +33,7 @@ export function websocketConnect() {
       const tickerValue = {
         id: msg['product_id'],
         curPrice: parseFloat(msg['price']),
-        volume: parseInt(msg['volume_24h'].split('.')[0]),
+        volume: concatVol(parseInt(msg['volume_24h'])),
         prevPrice: prevRes.curPrice,
         dirFilter: priceDirection(prevRes.dirFilter, msg['price'], prevRes.prevPrice),
         status: 'CONNECTED'

@@ -3,7 +3,7 @@ export type TickerType = 'STOCK' | 'CRYPTO';
 export interface TickerData {
   id: string;
   curPrice: number;
-  volume: number;
+  volume: string;
   prevPrice: number;
   dirFilter: string;
   status: StatusType;

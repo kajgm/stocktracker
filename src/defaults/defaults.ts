@@ -10,7 +10,8 @@ export const API_TIMEOUT = 100000;
 export const CRYPTO_ENDPOINT = 'wss://ws-feed.exchange.coinbase.com';
 export const STOCK_ENDPOINT = 'https://financialmodelingprep.com/api/v3/quote/';
 
-export const CRYPTO_TICKERS = ['ETH-USD', 'BTC-USD'] as string[];
-export const STOCK_TICKERS = ['AAPL', 'MSFT'] as string[];
-
-export const DEFAULT_TICKER = { prevPrice: 0, dirFilter: 'greenFilter', status: 'CONNECTING' } as TickerData;
+export const DEFAULT_TICKER = {
+  prevPrice: 0,
+  dirFilter: 'fill-emerald-500 -rotate-90',
+  status: 'CONNECTING'
+} as TickerData;
