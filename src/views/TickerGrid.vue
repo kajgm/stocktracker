@@ -10,7 +10,7 @@ const tickerStore = useTickerStore();
       <h1 class="font-medium text-4xl">Connecting...</h1>
     </div>
     <div v-else-if="tickerStore.status.overall == 'CONNECTED'" class="flex flex-wrap text-left">
-      <div v-for="[id, ticker] in tickerStore.tickerData" :key="id" class="px-5 pt-2 pb-5 min-w-60">
+      <div v-for="[id, ticker] in tickerStore.tickerData" :key="id" class="px-6 pt-3 pb-4 min-w-56">
         <h1 class="font-medium text-4xl">{{ ticker.id }}</h1>
         <div v-if="ticker.status == 'CONNECTING'">
           <h1 class="font-medium text-4xl">Connecting...</h1>
@@ -27,7 +27,7 @@ const tickerStore = useTickerStore();
             </svg>
             <h1 class="text-emerald-500 font-medium text-4xl py-2 px-1">${{ ticker.curPrice }}</h1>
           </div>
-          <h1 class="font-medium text-4xl">Vol: {{ ticker.volume }}</h1>
+          <h1 class="font-medium text-3xl">Vol: {{ ticker.volume }}</h1>
         </div>
       </div>
     </div>
