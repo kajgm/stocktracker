@@ -31,13 +31,15 @@ export function websocketConnect() {
     if (msg['type'] == 'ticker') {
       const socketTicker = msg as WebsocketData;
       const prevRes = tickerStore.tickerValue(socketTicker.product_id);
+      const curPrice = parseFloat(socketTicker.price);
+      const dayPrice = parseFloat(socketTicker.open_24h);
       const tickerValue = {
         id: socketTicker.product_id,
-        curPrice: parseFloat(socketTicker.price),
+        curPrice: curPrice,
         volume: parseFloat(socketTicker.volume_24h),
-        dayPercentage: parseFloat(socketTicker.price) / parseFloat(socketTicker.open_24h),
+        dayPercentage: ((curPrice - dayPrice) / dayPrice) * 100,
         prevPrice: prevRes.curPrice,
-        dirFilter: priceDirection(prevRes.dirFilter, parseFloat(socketTicker.price), prevRes.prevPrice),
+        dirFilter: priceDirection(prevRes.dirFilter, curPrice, prevRes.prevPrice),
         status: 'CONNECTED'
       } as TickerData;
       tickerStore.updateTickerData(socketTicker.product_id, tickerValue);

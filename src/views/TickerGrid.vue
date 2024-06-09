@@ -16,7 +16,6 @@ const tickerStore = useTickerStore();
       class="px-2 mx-1 pt-2 mt-1 pb-2 mb-1 w-56 h-36 bg-zinc-800 rounded-2xl"
     >
       <h1 class="font-medium text-4xl">{{ ticker.id }}</h1>
-
       <div v-if="ticker.status == 'CONNECTING'">
         <h1 class="font-medium text-4xl">Connecting...</h1>
       </div>
