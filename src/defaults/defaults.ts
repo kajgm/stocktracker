@@ -11,7 +11,9 @@ export const CRYPTO_ENDPOINT = 'wss://ws-feed.exchange.coinbase.com';
 export const STOCK_ENDPOINT = 'https://financialmodelingprep.com/api/v3/quote/';
 
 export const DEFAULT_TICKER = {
+  curPrice: 0,
   prevPrice: 0,
+  dayPercentage: 0,
   dirFilter: 'fill-emerald-500 -rotate-90',
   status: 'CONNECTING'
 } as TickerData;
