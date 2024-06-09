@@ -26,7 +26,10 @@ export function restApiPoll() {
             volume: apiTicker.volume,
             prevPrice: prevRes.curPrice,
             dayPercentage: apiTicker.changesPercentage,
-            dirFilter: priceDirection(prevRes.dirFilter, apiTicker.price, prevRes.prevPrice),
+            dirFilter:
+              prevRes.curPrice == -1
+                ? priceDirection(prevRes.dirFilter, apiTicker.changesPercentage, 0)
+                : priceDirection(prevRes.dirFilter, apiTicker.price, prevRes.prevPrice),
             status: 'CONNECTED'
           } as TickerData;
           tickerStore.updateTickerData(apiTicker.symbol, stock);
