@@ -1,6 +1,8 @@
 # Stock Tracker &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kajgrant/stocktracker/blob/master/LICENSE) [![Node.js CI](https://github.com/kajgrant/stocktracker/actions/workflows/node.js.yml/badge.svg)](https://github.com/kajgrant/stocktracker/actions/workflows/node.js.yml) ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
 
-A minimal tracker for Stocks and Cryptocurrencies. Intended for use on external Raspberry Pi based displays or within a browser.
+A minimal tracker for Stocks and Cryptocurrencies. Intended for use on external Raspberry Pi based displays (3.5inch) or within a browser.
+
+![Example](docs/example.png)
 
 ## Developed With
 
