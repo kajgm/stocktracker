@@ -30,7 +30,7 @@ onMounted(() => {
 
 <template>
   <div class="flex h-screen">
-    <div v-if="cryptoTickers || stockTickers" class="max-w-screen-sm m-auto">
+    <div v-if="cryptoTickers || stockTickers" class="max-w-screen-lg m-auto">
       <TickerGrid />
     </div>
     <div v-else>
