@@ -29,8 +29,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-row min-h-screen justify-center items-center overflow-hidden">
-    <div v-if="cryptoTickers || stockTickers">
+  <div class="flex h-screen">
+    <div v-if="cryptoTickers || stockTickers" class="max-w-screen-sm m-auto">
       <TickerGrid />
     </div>
     <div v-else>

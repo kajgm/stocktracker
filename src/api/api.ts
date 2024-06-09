@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { type TickerData } from '@/types/types';
+import { type ApiRequestData, type TickerData } from '@/types/types';
 import { useTickerStore } from '@/store/ticker';
 import { priceDirection } from '@/helpers/helpers';
 import { API_TIMEOUT, STOCK_ENDPOINT } from '@/defaults/defaults';
@@ -18,16 +18,18 @@ export function restApiPoll() {
       .get(STOCK_ENDPOINT + tickerStore.stockTickers.toString() + '?apikey=' + import.meta.env.VITE_VUE_APP_FMP_KEY)
       .then((res) => {
         for (let i = 0; i < res.data.length; i++) {
-          const prevRes = tickerStore.tickerValue(res.data[i].symbol);
+          const apiTicker = res.data[i] as ApiRequestData;
+          const prevRes = tickerStore.tickerValue(apiTicker.symbol);
           const stock = {
-            id: res.data[i].symbol as string,
-            curPrice: res.data[i].price as number,
-            volume: res.data[i].volume as number,
+            id: apiTicker.symbol,
+            curPrice: apiTicker.price,
+            volume: apiTicker.volume,
             prevPrice: prevRes.curPrice,
-            dirFilter: priceDirection(prevRes.dirFilter, res.data[i].price, prevRes.prevPrice),
+            dayPercentage: apiTicker.changesPercentage,
+            dirFilter: priceDirection(prevRes.dirFilter, apiTicker.price, prevRes.prevPrice),
             status: 'CONNECTED'
           } as TickerData;
-          tickerStore.updateTickerData(res.data[i].symbol, stock);
+          tickerStore.updateTickerData(apiTicker.symbol, stock);
         }
       })
       .catch((error) => {
