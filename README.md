@@ -28,10 +28,12 @@ A minimal tracker for Stocks and Cryptocurrencies. Intended for use on external 
 npm install
 ```
 
-### (Optional) Create a `.env` file and add your Financial Modeling Prep API key
+### Create a `.env` file (using the .env.template) and add parameters
 
 ```
-VITE_VUE_APP_FMP_KEY="your_api_key"
+VITE_VUE_APP_FMP_KEY="<your_api_key>"
+VITE_VUE_APP_STOCK_TICKERS="MSFT,AAPL,NVDA,AMD,INTC,AMZN"
+VITE_VUE_APP_CRYPTO_TICKERS="ETH-USD,BTC-USD"
 ```
 
 ### Compile and Hot-Reload for Development
