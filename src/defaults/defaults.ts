@@ -17,3 +17,30 @@ export const DEFAULT_TICKER = {
   dirFilter: 'fill-emerald-500 -rotate-90',
   status: 'CONNECTING'
 } as TickerData;
+
+export const SizeMap = {
+  SMALL: {
+    name: 'text-4xl',
+    price: 'text-4xl',
+    status: 'text-4xl',
+    padding: 'pl-1',
+    iconSize: 'h-5',
+    info: 'text-2xl'
+  },
+  LARGE: {
+    name: 'text-6xl',
+    price: 'text-7xl',
+    status: 'text-6xl',
+    padding: 'pl-4 pt-6',
+    iconSize: 'h-10',
+    info: 'text-5xl'
+  },
+  MEDIUM: {
+    name: 'text-6xl',
+    price: 'text-7xl',
+    status: 'text-6xl',
+    padding: 'pl-4 pt-6',
+    iconSize: 'h-10',
+    info: 'text-5xl'
+  }
+};

@@ -56,3 +56,5 @@ export interface WebsocketData {
 }
 
 export type StatusType = 'CONNECTED' | 'CONNECTING' | 'ERROR';
+
+export type SizeType = 'SMALL' | 'MEDIUM' | 'LARGE';

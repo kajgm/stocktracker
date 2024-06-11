@@ -27,6 +27,9 @@ export const useTickerStore = defineStore('ticker', {
     tickerData(): Map<string, TickerData> {
       return this.tickerDataMap;
     },
+    tickerKeys(): string[] {
+      return Array.from(this.tickerDataMap.keys());
+    },
     overallStatus(): StatusType {
       return this.status.overall;
     },
