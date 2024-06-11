@@ -2,8 +2,7 @@
 import { useTickerStore } from '@/store/ticker';
 import { concatNumber } from '@/helpers/helpers';
 import { computed } from 'vue';
-import type { TickerData, SizeType } from '@/types/types';
-import { SizeMap } from '@/defaults/defaults';
+import type { TickerData, SizeType, TypeSizeMap } from '@/types/types';
 
 const tickerStore = useTickerStore();
 
@@ -16,6 +15,33 @@ const { tickerId, boxSize, rLink } = defineProps<{
 const ticker = computed<TickerData>(() => {
   return tickerStore.tickerValue(tickerId);
 });
+
+const SizeMap: TypeSizeMap = {
+  SMALL: {
+    name: 'text-4xl',
+    price: 'text-4xl',
+    status: 'text-4xl',
+    padding: 'pl-1',
+    iconSize: 'h-5',
+    info: 'text-2xl'
+  },
+  LARGE: {
+    name: 'text-6xl',
+    price: 'text-7xl',
+    status: 'text-6xl',
+    padding: 'pl-4 pt-6',
+    iconSize: 'h-10',
+    info: 'text-5xl'
+  },
+  MEDIUM: {
+    name: 'text-6xl',
+    price: 'text-7xl',
+    status: 'text-6xl',
+    padding: 'pl-4 pt-6',
+    iconSize: 'h-10',
+    info: 'text-5xl'
+  }
+};
 
 const sInfo = SizeMap[boxSize];
 </script>

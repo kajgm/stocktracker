@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { type TickerData, type StatusType, type TickerType } from '@/types/types';
-import { DEFAULT_TICKER } from '@/defaults/defaults';
 
 interface State {
   stockTickers: string[];
@@ -13,6 +12,14 @@ interface State {
   };
 }
 
+const defaultTicker = {
+  curPrice: -1,
+  prevPrice: -1,
+  dayPercentage: -1,
+  dirFilter: 'fill-emerald-500 -rotate-90',
+  status: 'CONNECTING'
+} as TickerData;
+
 export const useTickerStore = defineStore('ticker', {
   state: (): State => ({
     stockTickers: [],
@@ -22,7 +29,7 @@ export const useTickerStore = defineStore('ticker', {
   }),
   getters: {
     tickerValue(): (key: string) => TickerData {
-      return (key: string) => this.tickerDataMap.get(key) || DEFAULT_TICKER;
+      return (key: string) => this.tickerDataMap.get(key) || defaultTicker;
     },
     tickerData(): Map<string, TickerData> {
       return this.tickerDataMap;
@@ -68,7 +75,7 @@ export const useTickerStore = defineStore('ticker', {
       } else {
         console.log('Error: not a valid type!');
       }
-      this.updateTickerData(id, ticker || DEFAULT_TICKER);
+      this.updateTickerData(id, ticker || defaultTicker);
     }
   }
 });

@@ -2,10 +2,18 @@ import axios from 'axios';
 import { type ApiRequestData, type TickerData } from '@/types/types';
 import { useTickerStore } from '@/store/ticker';
 import { priceDirection } from '@/helpers/helpers';
-import { API_TIMEOUT, STOCK_ENDPOINT } from '@/defaults/defaults';
 
-const openHours = 9 * 60 + 30;
-const closeHours = 16 * 60;
+// Limited to 250 requests per day
+// Standard trading day is open 6.5 hours
+// (6.5hr * 60min * 60sec * 1000ms) / 250 requests
+// Called every ~1.7min, rounded up to account for testing/error
+// Can change this later to ~93600
+const API_TIMEOUT = 100000;
+
+const STOCK_ENDPOINT = 'https://financialmodelingprep.com/api/v3/quote/';
+
+const openHours = 570; // 9 * 60 + 30
+const closeHours = 960; // 16 * 60
 
 export function restApiPoll() {
   const tickerStore = useTickerStore();

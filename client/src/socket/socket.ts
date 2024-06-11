@@ -1,7 +1,8 @@
 import { useTickerStore } from '@/store/ticker';
-import { type StatusType, type TickerData, type WebsocketData } from '@/types/types';
 import { priceDirection } from '@/helpers/helpers';
-import { CRYPTO_ENDPOINT } from '@/defaults/defaults';
+import { type StatusType, type TickerData, type WebsocketData } from '@/types/types';
+
+const CRYPTO_ENDPOINT = 'wss://ws-feed.exchange.coinbase.com';
 
 export function websocketConnect() {
   const tickerStore = useTickerStore();

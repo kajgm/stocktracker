@@ -58,3 +58,16 @@ export interface WebsocketData {
 export type StatusType = 'CONNECTED' | 'CONNECTING' | 'ERROR';
 
 export type SizeType = 'SMALL' | 'MEDIUM' | 'LARGE';
+
+export interface SizeInfo {
+  name: string;
+  price: string;
+  status: string;
+  padding: string;
+  iconSize: string;
+  info: string;
+}
+
+export type TypeSizeMap = {
+  [key in SizeType]: SizeInfo;
+};
