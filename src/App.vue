@@ -3,7 +3,6 @@ import { onMounted } from 'vue';
 import { websocketConnect } from './socket/socket';
 import { restApiPoll } from './api/api';
 import { useTickerStore } from './store/ticker';
-import TickerGrid from './views/TickerGrid.vue';
 
 const tickerStore = useTickerStore();
 const stockStr = import.meta.env.VITE_VUE_APP_STOCK_TICKERS;
@@ -30,8 +29,8 @@ onMounted(() => {
 
 <template>
   <div class="flex h-screen">
-    <div v-if="cryptoTickers || stockTickers" class="max-w-screen-lg m-auto">
-      <TickerGrid />
+    <div v-if="cryptoTickers || stockTickers" class="w-pi-w h-pi-h m-auto">
+      <RouterView />
     </div>
     <div v-else>
       <h1 class="text-4xl">Add some tickers to your .env to get started</h1>

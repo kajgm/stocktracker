@@ -62,11 +62,10 @@ npm run lint
 
 ## Docker Deployment
 
-To deploy within Docker, please follow these steps
-
-### Prerequisites
+To deploy within Docker, please follow these steps:
 
 1. Install [Docker Engine](https://docs.docker.com/engine/install/)
+
 2. Build the dockerfile
    > Tip: Run `sudo usermod -aG docker <user>` to avoid prefixing the following commands with sudo
 
@@ -84,7 +83,8 @@ docker run -d -p 8080:80 --name stock-tracker-1 kajgr/stocktracker
 
 Ensure the Docker deployment steps from above are followed on the target Raspberry Pi
 
-1. Install chromium browser version 88
+1. (Optional) Install chromium browser version 88
+   > For whatever reason the latest version of chromium-browser sometimes doesn't play nice. If you're running into issues with the next few commands, try installing this version.
 
 ```
 wget "http://archive.raspberrypi.org/debian/pool/main/c/chromium-browser/chromium-browser_88.0.4324.187-rpt1_armhf.deb"
@@ -101,13 +101,13 @@ export DISPLAY=:0
 3. Run chromium in fullscreen mode
 
 ```
-chromium-browser --app=http://localhost:8080/ --start-fullscreen --incognito
+chromium-browser --kiosk --app=http://localhost:8080/ --start-fullscreen --incognito
 ```
 
 > Alternatively, you may have to append `nohup` and `&` to run the command in the background (if executing via ssh):
 
 ```
-nohup chromium-browser --app=http://localhost:8080/ --start-fullscreen --incognito &
+nohup chromium-browser --kiosk --app=http://localhost:8080/ --start-fullscreen --incognito &
 ```
 
 ### Troubleshooting

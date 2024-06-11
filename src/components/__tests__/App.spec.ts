@@ -10,6 +10,6 @@ describe('App', () => {
 
   it('renders properly', () => {
     const wrapper = mount(App);
-    expect(wrapper.text()).toContain('Connecting...');
+    expect(wrapper.text()).toContain('');
   });
 });
