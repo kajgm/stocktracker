@@ -35,8 +35,6 @@ export interface ApiRequestData {
   timestamp: number;
 }
 
-export type WebSocketMessage = { data: object };
-
 export interface WebsocketData {
   best_ask: string;
   best_ask_size: string;

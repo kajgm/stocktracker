@@ -9,12 +9,10 @@ const { tickerId } = defineProps<{
 }>();
 
 const tickerStore = useTickerStore();
-
-const boxSize = 'LARGE' as SizeType;
-
 const ticker = computed<TickerData>(() => {
   return tickerStore.tickerValue(tickerId);
 });
+const boxSize = 'LARGE' as SizeType;
 </script>
 
 <template>
