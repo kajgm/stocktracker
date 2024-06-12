@@ -8,7 +8,7 @@ export function priceDirection(currentdirection: string, currentPrice: number, p
 }
 
 //Credit to: https://stackoverflow.com/a/9462382
-export function concatNumber(num: number, digits: number, extraPrecise?: Boolean, ignoreTrailing?: boolean): string {
+export function concatNumber(num: number, digits: number, extraPrecise?: boolean, ignoreTrailing?: boolean): string {
   const lookup = [
     { value: 1, symbol: '' },
     { value: 1e3, symbol: 'k' },

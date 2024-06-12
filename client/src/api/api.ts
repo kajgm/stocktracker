@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { type ApiRequestData, type TickerData } from '@/types/types';
-import { useTickerStore } from '@/store/ticker';
-import { priceDirection } from '@/helpers/helpers';
+import { type ApiRequestData, type TickerData } from '@/types/types.js';
+import { useTickerStore } from '@/store/ticker.js';
+import { priceDirection } from '@/helpers/helpers.js';
 
 // Limited to 250 requests per day
 // Standard trading day is open 6.5 hours
@@ -23,10 +23,10 @@ export function restApiPoll() {
 
   if ((openHours <= currentTime && currentTime <= closeHours && isWeekday) || tickerStore.apiStatus != 'CONNECTED') {
     axios
-      .get(STOCK_ENDPOINT + tickerStore.stockTickers.toString() + '?apikey=' + import.meta.env.VITE_VUE_APP_FMP_KEY)
+      .get(STOCK_ENDPOINT + tickerStore.stockTickers.toString() + '?apikey=' + process.env.FMP_KEY)
       .then((res) => {
-        for (let i = 0; i < res.data.length; i++) {
-          const apiTicker = res.data[i] as ApiRequestData;
+        for (const ticker of res.data) {
+          const apiTicker = ticker as ApiRequestData;
           const prevRes = tickerStore.tickerValue(apiTicker.symbol);
           const stock = {
             id: apiTicker.symbol,

@@ -14,7 +14,7 @@ const boxSize = 'SMALL' as SizeType;
   </div>
   <div v-else-if="tickerStore.status.overall == 'CONNECTED'" class="flex flex-wrap justify-center m-auto w-full h-full">
     <div v-for="id in tickerStore.tickerKeys" :key="id" class="w-1/2 h-1/2">
-      <TickerBox :tickerId="id" :boxSize="boxSize" :rLink="id"></TickerBox>
+      <TickerBox :ticker-id="id" :box-size="boxSize" :r-link="id"></TickerBox>
     </div>
   </div>
 </template>

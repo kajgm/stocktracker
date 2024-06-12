@@ -5,10 +5,10 @@ import { restApiPoll } from './api/api';
 import { useTickerStore } from './store/ticker';
 
 const tickerStore = useTickerStore();
-const stockStr = import.meta.env.VITE_VUE_APP_STOCK_TICKERS;
-const cryptoStr = import.meta.env.VITE_VUE_APP_CRYPTO_TICKERS;
-const stockTickers = stockStr && (stockStr.split(',') as string[]);
-const cryptoTickers = cryptoStr && (cryptoStr.split(',') as string[]);
+const stockStr = process.env.STOCK_TICKERS;
+const cryptoStr = process.env.CRYPTO_TICKERS;
+const stockTickers = stockStr && stockStr.split(',');
+const cryptoTickers = cryptoStr && cryptoStr.split(',');
 
 onMounted(() => {
   // Crypto Coinbase websocket
@@ -18,7 +18,7 @@ onMounted(() => {
   }
 
   // Financial Modeling Prep api polling
-  if (import.meta.env.VITE_VUE_APP_FMP_KEY && stockTickers) {
+  if (process.env.FMP_KEY && stockTickers) {
     stockTickers.forEach((e: string) => tickerStore.addNewTicker(e, 'STOCK'));
     restApiPoll();
   } else {

@@ -1,6 +1,6 @@
-import { useTickerStore } from '@/store/ticker';
-import { priceDirection } from '@/helpers/helpers';
-import { type StatusType, type TickerData, type WebsocketData } from '@/types/types';
+import { useTickerStore } from '@/store/ticker.js';
+import { priceDirection } from '@/helpers/helpers.js';
+import { WebSocketMessage, type StatusType, type TickerData, type WebsocketData } from '@/types/types.js';
 
 const CRYPTO_ENDPOINT = 'wss://ws-feed.exchange.coinbase.com';
 
@@ -27,8 +27,10 @@ export function websocketConnect() {
     tickerStore.setSocketStatus('CONNECTED');
   };
 
-  socket.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
+  socket.onmessage = (e: MessageEvent<unknown>) => {
+    const msg = JSON.parse(e.data as string);
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (msg['type'] == 'ticker') {
       const socketTicker = msg as WebsocketData;
       const prevRes = tickerStore.tickerValue(socketTicker.product_id);

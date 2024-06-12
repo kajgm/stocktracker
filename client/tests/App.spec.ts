@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { mount } from '@vue/test-utils';
-import router from '../../router';
-import App from '../../App.vue';
+import router from '../src/router';
+import App from '../src/App.vue';
 
 describe('App', () => {
   beforeEach(() => {

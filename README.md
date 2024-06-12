@@ -28,17 +28,18 @@ A minimal tracker for Stocks and Cryptocurrencies. Intended for use on external 
 npm install
 ```
 
-### Create a `.env` file (using the .env.template) and add parameters
+### Create a `.env` file within `client/` (using .env.template) and add parameters
 
 ```
-VITE_VUE_APP_FMP_KEY="<your_api_key>"
-VITE_VUE_APP_STOCK_TICKERS="MSFT,AAPL,NVDA,AMD,INTC,AMZN"
-VITE_VUE_APP_CRYPTO_TICKERS="ETH-USD,BTC-USD"
+FMP_KEY="<your_api_key>"
+STOCK_TICKERS="MSFT,AAPL,NVDA,AMD,INTC,AMZN"
+CRYPTO_TICKERS="ETH-USD,BTC-USD"
 ```
 
 ### Compile and Hot-Reload for Development
 
 ```sh
+cd client
 npm run dev
 ```
 
@@ -51,7 +52,7 @@ npm run build
 ### Run Unit Tests with [Vitest](https://vitest.dev/)
 
 ```sh
-npm run test:unit
+npm run test
 ```
 
 ### Lint with [ESLint](https://eslint.org/)
@@ -66,7 +67,7 @@ To deploy within Docker, please follow these steps:
 
 1. Install [Docker Engine](https://docs.docker.com/engine/install/)
 
-2. Build the dockerfile
+2. Build the dockerfile within the client directory
    > Tip: Run `sudo usermod -aG docker <user>` to avoid prefixing the following commands with sudo
 
 ```

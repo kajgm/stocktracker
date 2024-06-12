@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { type TickerData, type StatusType, type TickerType } from '@/types/types';
+import { type TickerData, type StatusType, type TickerType } from '@/types/types.js';
 
 interface State {
   stockTickers: string[];

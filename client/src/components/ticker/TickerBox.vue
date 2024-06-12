@@ -4,13 +4,13 @@ import { concatNumber } from '@/helpers/helpers';
 import { computed } from 'vue';
 import type { TickerData, SizeType, TypeSizeMap } from '@/types/types';
 
-const tickerStore = useTickerStore();
-
 const { tickerId, boxSize, rLink } = defineProps<{
   tickerId: string;
   boxSize: SizeType;
   rLink: string;
 }>();
+
+const tickerStore = useTickerStore();
 
 const ticker = computed<TickerData>(() => {
   return tickerStore.tickerValue(tickerId);

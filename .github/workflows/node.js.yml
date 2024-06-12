@@ -30,8 +30,9 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     env:
-      VITE_VUE_APP_STOCK_TICKERS: 'GME,RDDT'
-      VITE_VUE_APP_CRYPTO_TICKERS: 'ETH-USD,BTC-USD'
+      FMP_KEY: ''
+      STOCK_TICKERS: 'MSFT,AAPL,NVDA,AMD,INTC,AMZN'
+      CRYPTO_TICKERS: 'ETH-USD,BTC-USD'
     timeout-minutes: 10
     strategy:
       matrix:

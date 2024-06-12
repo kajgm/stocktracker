@@ -4,7 +4,7 @@
     "baseUrl": "./",
     "noEmit": true,
     "emitDeclarationOnly": false,
-    "module": "commonJS",
+    "module": "NodeNext",
     "rootDir": "./",
     "paths": {
       ":common/*": ["../common/src/*"]
