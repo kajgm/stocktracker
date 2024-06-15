@@ -3,18 +3,13 @@
   "include": ["vite-env.d.ts", "src/**/*", "src/**/*.vue", "tests/**/*.spec.ts"],
   "exclude": ["**/node_modules/**/*"],
   "compilerOptions": {
-    "module": "NodeNext",
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       ":common/*": ["../common/src/*"]
     },
-    "types": ["vite/client", "@types/node"],
-    "allowJs": true,
-    "importHelpers": true,
-    "noUnusedLocals": false,
-    "noImplicitReturns": false
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "types": ["vite/client", "@types/node"]
   },
   "references": [
     {
