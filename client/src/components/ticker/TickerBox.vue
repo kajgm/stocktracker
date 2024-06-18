@@ -19,19 +19,11 @@ const ticker = computed<TickerData>(() => {
 const SizeMap: TypeSizeMap = {
   SMALL: {
     name: 'text-4xl',
-    price: 'text-4xl',
+    price: 'text-4xl max-w-40',
     status: 'text-4xl',
-    padding: 'pl-1',
+    padding: '',
     iconSize: 'h-5',
     info: 'text-2xl'
-  },
-  LARGE: {
-    name: 'text-6xl',
-    price: 'text-7xl',
-    status: 'text-6xl',
-    padding: 'pl-4 pt-6',
-    iconSize: 'h-10',
-    info: 'text-5xl'
   },
   MEDIUM: {
     name: 'text-6xl',
@@ -39,7 +31,15 @@ const SizeMap: TypeSizeMap = {
     status: 'text-6xl',
     padding: 'pl-4 pt-6',
     iconSize: 'h-10',
-    info: 'text-5xl'
+    info: 'text-5xl pb-2'
+  },
+  LARGE: {
+    name: 'text-6xl',
+    price: 'text-7xl',
+    status: 'text-6xl',
+    padding: 'pl-4 pt-6',
+    iconSize: 'h-10',
+    info: 'text-5xl pb-2'
   }
 };
 
@@ -48,7 +48,7 @@ const sInfo = SizeMap[boxSize];
 
 <template>
   <div class="p-1.5 w-full h-full">
-    <div class="bg-zinc-800 rounded-2xl w-full h-full">
+    <div class="bg-zinc-800 rounded-2xl w-full h-full overflow-hidden">
       <RouterLink :to="rLink">
         <div class="p-2 h-full w-full flex flex-wrap flex-col">
           <h1 class="font-medium" :class="sInfo.name">{{ ticker.id }}</h1>
@@ -77,7 +77,11 @@ const sInfo = SizeMap[boxSize];
                 class="font-medium text-right inline-block px-1 w-1/2"
                 :class="[ticker.dayPercentage >= 0 ? 'text-emerald-500' : 'text-red-500', sInfo.info]"
               >
-                {{ ticker.dayPercentage.toPrecision(3) }}%
+                {{
+                  ticker.dayPercentage < 0.1
+                    ? ticker.dayPercentage.toPrecision(3)
+                    : ticker.dayPercentage.toPrecision(1)
+                }}%
               </h1>
             </div>
           </div>
