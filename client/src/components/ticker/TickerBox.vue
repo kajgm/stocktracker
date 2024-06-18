@@ -78,7 +78,7 @@ const sInfo = SizeMap[boxSize];
                 :class="[ticker.dayPercentage >= 0 ? 'text-emerald-500' : 'text-red-500', sInfo.info]"
               >
                 {{
-                  ticker.dayPercentage < 0.1
+                  Math.abs(ticker.dayPercentage) > 0.1
                     ? ticker.dayPercentage.toPrecision(3)
                     : ticker.dayPercentage.toPrecision(1)
                 }}%
