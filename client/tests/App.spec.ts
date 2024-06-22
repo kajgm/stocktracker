@@ -12,7 +12,7 @@ describe('App', () => {
   });
 
   it('renders properly', async () => {
-    router.push('/');
+    void router.push('/');
     await router.isReady();
 
     const wrapper = mount(App, {
