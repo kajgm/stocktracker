@@ -7,8 +7,8 @@ import { useTickerStore } from './store/ticker';
 const tickerStore = useTickerStore();
 const stockStr = process.env.STOCK_TICKERS;
 const cryptoStr = process.env.CRYPTO_TICKERS;
-const stockTickers = stockStr && stockStr.split(',');
-const cryptoTickers = cryptoStr && cryptoStr.split(',');
+const stockTickers = stockStr != '' ? stockStr && stockStr.split(',') : [];
+const cryptoTickers = cryptoStr != '' ? cryptoStr && cryptoStr.split(',') : [];
 
 onMounted(() => {
   // Crypto Coinbase websocket
@@ -18,11 +18,11 @@ onMounted(() => {
   }
 
   // Financial Modeling Prep api polling
-  if (process.env.FMP_KEY && stockTickers) {
+  if (process.env.FMP_KEY && process.env.FMP_KEY != '<your_api_key>' && stockTickers) {
     stockTickers.forEach((e: string) => tickerStore.addNewTicker(e, 'STOCK'));
     restApiPoll();
   } else {
-    console.log('.env file with api key and tickers not created!');
+    console.log('.env file does not contain an api key, skipping stock tickers');
   }
 });
 </script>
