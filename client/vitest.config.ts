@@ -8,7 +8,10 @@ export default mergeConfig(
     test: {
       environment: 'jsdom',
       exclude: [...configDefaults.exclude],
-      root: fileURLToPath(new URL('./', import.meta.url))
+      root: fileURLToPath(new URL('./', import.meta.url)),
+      coverage: {
+        exclude: ['*.config.*', '*.cjs', 'src/main.ts']
+      }
     }
   })
 );

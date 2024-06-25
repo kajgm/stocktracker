@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { createApp } from 'vue';
+import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
-import pinia from './store';
 import './assets/main.css';
 
 const app = createApp(App);
+const pinia = createPinia();
 
 app.use(pinia);
 app.use(router);
