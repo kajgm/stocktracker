@@ -10,7 +10,7 @@ export default mergeConfig(
       exclude: [...configDefaults.exclude],
       root: fileURLToPath(new URL('./', import.meta.url)),
       coverage: {
-        exclude: ['*.config.*', '*.cjs', 'src/main.ts']
+        exclude: ['*.config.*', '*.cjs', 'src/main.ts', 'src/api/api.ts', 'src/socket/socket.ts']
       }
     }
   })
