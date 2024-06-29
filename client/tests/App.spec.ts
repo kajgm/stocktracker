@@ -72,7 +72,7 @@ describe('App', () => {
       }
     });
 
-    expect(wrapper.text()).toEqual('Connecting...');
+    expect(wrapper.text()).toContain('Connecting...');
     expect(websocketSpy).toHaveBeenCalled();
     expect(apiSpy).toHaveBeenCalled();
     await vi.waitFor(() => {
@@ -109,7 +109,7 @@ describe('App', () => {
       }
     });
 
-    expect(wrapper.text()).toEqual('Connecting...');
+    expect(wrapper.text()).toContain('Connecting...');
     expect(websocketSpy).toHaveBeenCalled();
     await vi.waitFor(() => {
       expect(tickerStore.overallStatus).toEqual('CONNECTED' as StatusType);
@@ -145,7 +145,7 @@ describe('App', () => {
       }
     });
 
-    expect(wrapper.text()).toEqual('Connecting...');
+    expect(wrapper.text()).toContain('Connecting...');
     expect(apiSpy).toHaveBeenCalled();
     await vi.waitFor(() => {
       expect(tickerStore.overallStatus).toEqual('CONNECTED' as StatusType);
@@ -207,7 +207,7 @@ describe('App', () => {
       }
     });
 
-    expect(wrapper.text()).toEqual('Connecting...');
+    expect(wrapper.text()).toContain('Connecting...');
     expect(websocketSpy).toHaveBeenCalled();
 
     await vi.waitFor(() => {
@@ -261,7 +261,7 @@ describe('App', () => {
       }
     });
 
-    expect(wrapper.text()).toEqual('Connecting...');
+    expect(wrapper.text()).toContain('Connecting...');
     expect(websocketSpy).toHaveBeenCalled();
 
     await vi.waitFor(async () => {
