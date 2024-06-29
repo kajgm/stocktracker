@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [
     vue(),
     EnvironmentPlugin({
-      FMP_KEY: 'undefined',
+      FMP_KEY: null,
       STOCK_TICKERS: 'MSFT,AAPL,NVDA,AMD,INTC,AMZN',
       CRYPTO_TICKERS: 'ETH-USD,BTC-USD',
       appVersion: version

@@ -19,7 +19,7 @@ onMounted(() => {
   }
 
   // Financial Modeling Prep api polling
-  if (process.env.FMP_KEY && process.env.FMP_KEY != '<your_api_key>' && stockTickers) {
+  if (process.env.FMP_KEY && stockTickers) {
     stockTickers.forEach((e: string) => tickerStore.addNewTicker(e, 'STOCK'));
     restApiPoll();
   } else {
