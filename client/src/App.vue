@@ -5,6 +5,7 @@ import { restApiPoll } from './api/api';
 import { useTickerStore } from './store/ticker';
 
 const tickerStore = useTickerStore();
+const appVersion = process.env.appVersion;
 const stockStr = process.env.STOCK_TICKERS;
 const cryptoStr = process.env.CRYPTO_TICKERS;
 const stockTickers = stockStr != '' ? stockStr && stockStr.split(',') : [];
@@ -31,6 +32,7 @@ onMounted(() => {
   <div class="flex h-screen">
     <div v-if="cryptoTickers || stockTickers" class="w-pi-w h-pi-h m-auto">
       <RouterView />
+      <div class="absolute left-[calc(50%-15px)] top-[calc(50%-8px)] text-xs text-zinc-600">v{{ appVersion }}</div>
     </div>
     <div v-else>
       <h1 class="text-4xl">Add some tickers to your .env to get started</h1>
