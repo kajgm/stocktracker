@@ -39,7 +39,6 @@ CRYPTO_TICKERS="ETH-USD,BTC-USD"
 ### Compile and Hot-Reload for Development
 
 ```sh
-cd client
 npm run dev
 ```
 
