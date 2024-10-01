@@ -2,8 +2,6 @@ import { defineStore } from 'pinia';
 import { type TickerData, type StatusType, type TickerType } from '@/types/types.js';
 
 interface State {
-  stockTickers: string[];
-  cryptoTickers: string[];
   tickerDataMap: Map<string, TickerData>;
   status: {
     overall: StatusType;
@@ -17,13 +15,12 @@ const defaultTicker = {
   prevPrice: -1,
   dayPercentage: -1,
   dirFilter: 'fill-emerald-500 -rotate-90',
-  status: 'CONNECTING'
+  status: 'CONNECTING',
+  type: undefined
 } as TickerData;
 
 export const useTickerStore = defineStore('ticker', {
   state: (): State => ({
-    stockTickers: [],
-    cryptoTickers: [],
     tickerDataMap: new Map<string, TickerData>(),
     status: { overall: 'CONNECTING', api: 'CONNECTING', socket: 'CONNECTING' }
   }),
@@ -36,6 +33,12 @@ export const useTickerStore = defineStore('ticker', {
     },
     tickerKeys(): string[] {
       return Array.from(this.tickerDataMap.keys());
+    },
+    cryptoTickers(): string[] {
+      return [...this.tickerDataMap.entries()].filter(({ 1: v }) => v.type == 'CRYPTO').map(([k]) => k);
+    },
+    stockTickers(): string[] {
+      return [...this.tickerDataMap.entries()].filter(({ 1: v }) => v.type == 'STOCK').map(([k]) => k);
     },
     overallStatus(): StatusType {
       return this.status.overall;
@@ -64,18 +67,19 @@ export const useTickerStore = defineStore('ticker', {
         this.status.overall = 'CONNECTING';
       }
     },
-    updateTickerData(key: string, ticker: TickerData) {
-      this.tickerDataMap.set(key, ticker);
+    updateTickerData(key: string, tData: TickerData) {
+      this.tickerDataMap.set(key, tData);
     },
-    addNewTicker(id: string, type: TickerType, ticker?: TickerData) {
-      if (type == 'STOCK') {
-        this.stockTickers.push(id);
-      } else if (type == 'CRYPTO') {
-        this.cryptoTickers.push(id);
-      } else {
-        console.log('Error: not a valid type!');
-      }
-      this.updateTickerData(id, ticker || defaultTicker);
+    addNewTicker(id: string, type: TickerType, tData?: TickerData) {
+      const tickerData = tData ? tData : defaultTicker;
+      tickerData.type = type;
+      this.updateTickerData(id, tickerData);
+    },
+    clearCryptoTickers() {
+      this.tickerDataMap = new Map([...[...this.tickerDataMap].filter(([k, v]) => v.type != 'CRYPTO')]);
+    },
+    clearStockTickers() {
+      this.tickerDataMap = new Map([...[...this.tickerDataMap].filter(([k, v]) => v.type != 'STOCK')]);
     }
   }
 });

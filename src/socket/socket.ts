@@ -40,7 +40,8 @@ export function websocketConnect() {
         dayPercentage: ((curPrice - dayPrice) / dayPrice) * 100,
         prevPrice: prevRes.curPrice,
         dirFilter: priceDirection(prevRes.dirFilter, curPrice, prevRes.prevPrice),
-        status: 'CONNECTED'
+        status: 'CONNECTED',
+        type: 'CRYPTO'
       } as TickerData;
       tickerStore.updateTickerData(msg.product_id, tickerValue);
     }

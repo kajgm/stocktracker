@@ -1,4 +1,4 @@
-export type TickerType = 'STOCK' | 'CRYPTO';
+export type TickerType = 'STOCK' | 'CRYPTO' | undefined;
 
 export interface TickerData {
   id: string;
@@ -8,6 +8,7 @@ export interface TickerData {
   dayPercentage: number;
   dirFilter: string;
   status: StatusType;
+  type: TickerType;
 }
 
 export interface ApiRequestData {
