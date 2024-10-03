@@ -13,7 +13,7 @@ import router from '@/router';
 import App from '@/App.vue';
 
 describe('App', () => {
-  let websocketSpy: MockInstance<[], void>;
+  let websocketSpy: MockInstance<[], WebSocket>;
   let apiSpy: MockInstance<[], void>;
 
   const cryptoTicker = {
@@ -57,6 +57,7 @@ describe('App', () => {
     websocketSpy = vi.spyOn(websocket, 'websocketConnect').mockImplementation(() => {
       tickerStore.setSocketStatus('CONNECTED' as StatusType);
       tickerStore.addNewTicker(cryptoTicker.id, 'CRYPTO' as TickerType, cryptoTicker);
+      return null as unknown as WebSocket;
     });
     apiSpy = vi.spyOn(api, 'restApiPoll').mockImplementation(() => {
       tickerStore.setApiStatus('CONNECTED' as StatusType);
@@ -98,6 +99,7 @@ describe('App', () => {
     websocketSpy = vi.spyOn(websocket, 'websocketConnect').mockImplementation(() => {
       tickerStore.setSocketStatus('CONNECTED' as StatusType);
       tickerStore.addNewTicker(cryptoTicker.id, 'CRYPTO' as TickerType, cryptoTicker);
+      return null as unknown as WebSocket;
     });
 
     void router.push('/');
@@ -196,6 +198,7 @@ describe('App', () => {
     websocketSpy = vi.spyOn(websocket, 'websocketConnect').mockImplementation(() => {
       tickerStore.setSocketStatus('CONNECTED' as StatusType);
       tickerStore.addNewTicker(cryptoTicker.id, 'CRYPTO' as TickerType, cryptoTicker);
+      return null as unknown as WebSocket;
     });
 
     void router.push('/');
@@ -250,6 +253,7 @@ describe('App', () => {
       tickerStore.setApiStatus('CONNECTED' as StatusType);
       tickerStore.addNewTicker(cryptoTicker.id, 'CRYPTO' as TickerType, cryptoTicker);
       tickerStore.addNewTicker(stockTicker.id, 'STOCK' as TickerType, stockTicker);
+      return null as unknown as WebSocket;
     });
 
     void router.push('/');

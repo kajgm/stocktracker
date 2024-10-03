@@ -9,12 +9,13 @@ A minimal tracker for Stocks and Cryptocurrencies. Intended for use on external 
 - [Node](https://nodejs.org/)
 - [Vue](https://vuejs.org/)
 - [Vite](https://vitejs.dev/)
+- [Tailwind](https://tailwindcss.com/)
 
 ## Prerequisites
 
 1. Please ensure the following software is installed
 
-- [Node 18.x](https://nodejs.org/en/download)
+- [Node](https://nodejs.org/en/download)
 
 2. (Optional) To display exchange-traded stock tickers (AAPL, MSFT, etc.), create a Finanical Modeling Prep API key
 
@@ -22,9 +23,12 @@ A minimal tracker for Stocks and Cryptocurrencies. Intended for use on external 
 
 ## Project Setup
 
-### Install dependencies
+### Install client and server dependencies
 
 ```sh
+cd client
+npm install
+cd ../server
 npm install
 ```
 
@@ -39,22 +43,32 @@ CRYPTO_TICKERS="ETH-USD,BTC-USD"
 ### Compile and Hot-Reload for Development
 
 ```sh
+cd client
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+### Start the configuration server
+
+> Run in another terminal
+
+```
+cd server
+npm run dev
+```
+
+### Type-Check, Compile and Minify Client for Production
 
 ```sh
 npm run build
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+### Run Client Unit Tests with [Vitest](https://vitest.dev/)
 
 ```sh
 npm run test
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+### Lint Client with [ESLint](https://eslint.org/)
 
 ```sh
 npm run lint
@@ -70,13 +84,13 @@ To deploy within Docker, please follow these steps:
    > Tip: Run `sudo usermod -aG docker <user>` to avoid prefixing the following commands with sudo
 
 ```
-docker build -t kajgr/stocktracker .
+docker build -t kajgm/stocktracker .
 ```
 
 3. Run the dockerfile
 
 ```
-docker run -d -p 8080:80 --name stock-tracker-1 kajgr/stocktracker
+docker run -d -p 8080:80 --name --restart always stocktracker-1 kajgm/stocktracker
 ```
 
 ## Deployment on Raspberry Pi

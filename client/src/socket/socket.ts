@@ -60,4 +60,6 @@ export function websocketConnect() {
     tickerStore.setSocketStatus('ERROR');
     socket.close();
   };
+
+  return socket;
 }

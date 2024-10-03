@@ -3,7 +3,7 @@ import { computed, onMounted } from 'vue';
 import { websocketConnect } from './socket/socket';
 import { restApiPoll } from './api/api';
 import { useTickerStore } from './store/ticker';
-import axios from 'axios';
+import { getUpdatedTickers, pollUpdatedTickers } from './server/server';
 
 const tickerStore = useTickerStore();
 
@@ -15,51 +15,20 @@ const stockTickers = computed<string[]>(() => {
   return tickerStore.stockTickers;
 });
 
-function pollUpdatedTickers() {
-  let connectFlag = false;
-  void axios
-    .get('http://localhost:3000/api/tickers')
-    .then((res) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const cryptoTcks = res.data['cryptoTickers'] as string;
-      if (cryptoTcks && cryptoTcks.split(',').toString() != tickerStore.cryptoTickers.toString()) {
-        connectFlag = true;
-        tickerStore.clearCryptoTickers();
-        for (const ticker of cryptoTcks.split(',')) {
-          tickerStore.addNewTicker(ticker, 'CRYPTO');
-        }
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const stockTcks = res.data['stockTickers'] as string;
-      if (stockTcks && stockTcks.split(',').toString() != tickerStore.stockTickers.toString()) {
-        connectFlag = true;
-        tickerStore.clearStockTickers();
-        for (const ticker of stockTcks.split(',')) {
-          tickerStore.addNewTicker(ticker, 'STOCK');
-        }
-      }
-    })
-    .catch((err) => {
-      console.log('Failed to contact server!', err);
-    });
-
-  setTimeout(pollUpdatedTickers, 1000);
-  return connectFlag;
-}
-
 onMounted(() => {
+  // Get tickers from local server if available
+  const isConnected = getUpdatedTickers();
+
   // Crypto Coinbase websocket
+  let cryptoSocket;
   if (cryptoTickers.value) {
-    websocketConnect();
+    cryptoSocket = websocketConnect();
   }
 
   // Financial Modeling Prep api polling
   if (process.env.FMP_KEY && stockTickers.value) {
     restApiPoll();
   }
-
-  const isConnected = pollUpdatedTickers();
 
   if (!isConnected) {
     console.log('Failed to connect, defaulting to .env file');
@@ -78,6 +47,8 @@ onMounted(() => {
     } else {
       console.log('.env file does not contain a valid api key, skipping stock tickers');
     }
+  } else {
+    pollUpdatedTickers(cryptoSocket);
   }
 });
 </script>
@@ -88,7 +59,7 @@ onMounted(() => {
       <RouterView />
     </div>
     <div v-else>
-      <h1 class="text-4xl">Add some tickers to your .env to get started</h1>
+      <h1 class="text-4xl">Add some tickers to your .env or post some tickers to the server to get started</h1>
     </div>
   </div>
 </template>
