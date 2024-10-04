@@ -3,18 +3,21 @@
 import { type MockInstance, describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { mount } from '@vue/test-utils';
-import type { TickerType } from '@/types/types.js';
-import { type TickerData, type StatusType } from '@/types/types.js';
-import { useTickerStore } from '@/store/ticker.js';
-import { concatNumber, priceDirection } from '@/helpers/helpers.js';
-import * as websocket from '@/socket/socket.js';
-import * as api from '@/api/api.js';
+import type { TickerType } from '@/types/types';
+import { type TickerData, type StatusType } from '@/types/types';
+import { useTickerStore } from '@/store/ticker';
+import { concatNumber, priceDirection } from '@/helpers/helpers';
+import * as websocket from '@/socket/socket';
+import * as api from '@/api/api';
+import * as server from '@/server/server';
 import router from '@/router';
 import App from '@/App.vue';
 
 describe('App', () => {
   let websocketSpy: MockInstance<[], WebSocket>;
   let apiSpy: MockInstance<[], void>;
+  let serverSpyGet: MockInstance<[], boolean>;
+  let serverSpyPoll: MockInstance<[socket: WebSocket | undefined], void>;
 
   const cryptoTicker = {
     id: 'TEST-CAD',
@@ -23,6 +26,7 @@ describe('App', () => {
     dayPercentage: 1.23,
     prevPrice: 0,
     dirFilter: priceDirection('fill-emerald-500 -rotate-90', 1234, 9999),
+    type: 'CRYPTO',
     status: 'CONNECTED'
   } as TickerData;
 
@@ -33,6 +37,7 @@ describe('App', () => {
     dayPercentage: 4.2,
     prevPrice: 999,
     dirFilter: priceDirection('fill-red-500 rotate-90', 0, 0),
+    type: 'STOCK',
     status: 'CONNECTED'
   } as TickerData;
 
@@ -63,6 +68,10 @@ describe('App', () => {
       tickerStore.setApiStatus('CONNECTED' as StatusType);
       tickerStore.addNewTicker(stockTicker.id, 'STOCK' as TickerType, stockTicker);
     });
+    serverSpyGet = vi.spyOn(server, 'getUpdatedTickers').mockImplementation(() => {
+      return true;
+    });
+    serverSpyPoll = vi.spyOn(server, 'pollUpdatedTickers').mockImplementation(() => {});
 
     void router.push('/');
     await router.isReady();
@@ -93,7 +102,7 @@ describe('App', () => {
     const tickerStore = useTickerStore();
 
     const testMap = new Map<string, TickerData>();
-    testMap.set(cryptoTicker.id, cryptoTicker);
+    testMap.set(cryptoTicker.id as string, cryptoTicker);
 
     tickerStore.setSocketStatus('CONNECTING' as StatusType);
     websocketSpy = vi.spyOn(websocket, 'websocketConnect').mockImplementation(() => {
@@ -101,6 +110,10 @@ describe('App', () => {
       tickerStore.addNewTicker(cryptoTicker.id, 'CRYPTO' as TickerType, cryptoTicker);
       return null as unknown as WebSocket;
     });
+    serverSpyGet = vi.spyOn(server, 'getUpdatedTickers').mockImplementation(() => {
+      return true;
+    });
+    serverSpyPoll = vi.spyOn(server, 'pollUpdatedTickers').mockImplementation(() => {});
 
     void router.push('/');
     await router.isReady();
@@ -130,13 +143,17 @@ describe('App', () => {
     const tickerStore = useTickerStore();
 
     const testMap = new Map<string, TickerData>();
-    testMap.set(stockTicker.id, stockTicker);
+    testMap.set(stockTicker.id as string, stockTicker);
 
     tickerStore.setSocketStatus('CONNECTING' as StatusType);
     apiSpy = vi.spyOn(api, 'restApiPoll').mockImplementation(() => {
       tickerStore.setApiStatus('CONNECTED' as StatusType);
       tickerStore.addNewTicker(stockTicker.id, 'STOCK' as TickerType, stockTicker);
     });
+    serverSpyGet = vi.spyOn(server, 'getUpdatedTickers').mockImplementation(() => {
+      return true;
+    });
+    serverSpyPoll = vi.spyOn(server, 'pollUpdatedTickers').mockImplementation(() => {});
 
     void router.push('/');
     await router.isReady();
@@ -200,6 +217,10 @@ describe('App', () => {
       tickerStore.addNewTicker(cryptoTicker.id, 'CRYPTO' as TickerType, cryptoTicker);
       return null as unknown as WebSocket;
     });
+    serverSpyGet = vi.spyOn(server, 'getUpdatedTickers').mockImplementation(() => {
+      return true;
+    });
+    serverSpyPoll = vi.spyOn(server, 'pollUpdatedTickers').mockImplementation(() => {});
 
     void router.push('/');
     await router.isReady();
@@ -255,6 +276,10 @@ describe('App', () => {
       tickerStore.addNewTicker(stockTicker.id, 'STOCK' as TickerType, stockTicker);
       return null as unknown as WebSocket;
     });
+    serverSpyGet = vi.spyOn(server, 'getUpdatedTickers').mockImplementation(() => {
+      return true;
+    });
+    serverSpyPoll = vi.spyOn(server, 'pollUpdatedTickers').mockImplementation(() => {});
 
     void router.push('/');
     await router.isReady();

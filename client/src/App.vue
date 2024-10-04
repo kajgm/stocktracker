@@ -15,10 +15,28 @@ const stockTickers = computed<string[]>(() => {
   return tickerStore.stockTickers;
 });
 
-onMounted(() => {
-  // Get tickers from local server if available
-  const isConnected = getUpdatedTickers();
+// Get tickers from local server if available
+const isConnected = getUpdatedTickers();
+if (!isConnected) {
+  console.log('Failed to connect to local server, defaulting to .env file');
+  // Defaults from .env file
+  const stockStr = process.env.STOCK_TICKERS;
+  const cryptoStr = process.env.CRYPTO_TICKERS;
+  const envStockTickers = stockStr != '' ? stockStr && stockStr.split(',') : [];
+  const envCryptoTickers = cryptoStr != '' ? cryptoStr && cryptoStr.split(',') : [];
 
+  if (envCryptoTickers) {
+    envCryptoTickers.forEach((e: string) => tickerStore.addNewTicker(e, 'CRYPTO'));
+  }
+
+  if (process.env.FMP_KEY && envStockTickers) {
+    envStockTickers.forEach((e: string) => tickerStore.addNewTicker(e, 'STOCK'));
+  } else {
+    console.log('.env file does not contain a valid api key, skipping stock tickers');
+  }
+}
+
+onMounted(() => {
   // Crypto Coinbase websocket
   let cryptoSocket;
   if (cryptoTickers.value) {
@@ -30,24 +48,8 @@ onMounted(() => {
     restApiPoll();
   }
 
-  if (!isConnected) {
-    console.log('Failed to connect, defaulting to .env file');
-    // Defaults from .env file
-    const stockStr = process.env.STOCK_TICKERS;
-    const cryptoStr = process.env.CRYPTO_TICKERS;
-    const envStockTickers = stockStr != '' ? stockStr && stockStr.split(',') : [];
-    const envCryptoTickers = cryptoStr != '' ? cryptoStr && cryptoStr.split(',') : [];
-
-    if (envCryptoTickers) {
-      envCryptoTickers.forEach((e: string) => tickerStore.addNewTicker(e, 'CRYPTO'));
-    }
-
-    if (process.env.FMP_KEY && envStockTickers) {
-      envStockTickers.forEach((e: string) => tickerStore.addNewTicker(e, 'STOCK'));
-    } else {
-      console.log('.env file does not contain a valid api key, skipping stock tickers');
-    }
-  } else {
+  // Local configuration api server
+  if (isConnected) {
     pollUpdatedTickers(cryptoSocket);
   }
 });
