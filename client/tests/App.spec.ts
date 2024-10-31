@@ -16,7 +16,7 @@ import App from '@/App.vue';
 describe('App', () => {
   let websocketSpy: MockInstance<[], WebSocket>;
   let apiSpy: MockInstance<[], void>;
-  let serverSpyGet: MockInstance<[], boolean>;
+  let serverSpyGet: MockInstance<[], boolean[]>;
   let serverSpyPoll: MockInstance<[socket: WebSocket | undefined], void>;
 
   const cryptoTicker = {
@@ -69,7 +69,7 @@ describe('App', () => {
       tickerStore.addNewTicker(stockTicker.id, 'STOCK' as TickerType, stockTicker);
     });
     serverSpyGet = vi.spyOn(server, 'getUpdatedTickers').mockImplementation(() => {
-      return true;
+      return [true, false];
     });
     serverSpyPoll = vi.spyOn(server, 'pollUpdatedTickers').mockImplementation(() => {});
 
@@ -111,7 +111,7 @@ describe('App', () => {
       return null as unknown as WebSocket;
     });
     serverSpyGet = vi.spyOn(server, 'getUpdatedTickers').mockImplementation(() => {
-      return true;
+      return [true, false];
     });
     serverSpyPoll = vi.spyOn(server, 'pollUpdatedTickers').mockImplementation(() => {});
 
@@ -151,7 +151,7 @@ describe('App', () => {
       tickerStore.addNewTicker(stockTicker.id, 'STOCK' as TickerType, stockTicker);
     });
     serverSpyGet = vi.spyOn(server, 'getUpdatedTickers').mockImplementation(() => {
-      return true;
+      return [true, false];
     });
     serverSpyPoll = vi.spyOn(server, 'pollUpdatedTickers').mockImplementation(() => {});
 
@@ -218,7 +218,7 @@ describe('App', () => {
       return null as unknown as WebSocket;
     });
     serverSpyGet = vi.spyOn(server, 'getUpdatedTickers').mockImplementation(() => {
-      return true;
+      return [true, false];
     });
     serverSpyPoll = vi.spyOn(server, 'pollUpdatedTickers').mockImplementation(() => {});
 
@@ -277,7 +277,7 @@ describe('App', () => {
       return null as unknown as WebSocket;
     });
     serverSpyGet = vi.spyOn(server, 'getUpdatedTickers').mockImplementation(() => {
-      return true;
+      return [true, false];
     });
     serverSpyPoll = vi.spyOn(server, 'pollUpdatedTickers').mockImplementation(() => {});
 

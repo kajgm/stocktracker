@@ -56,7 +56,7 @@ export interface WebsocketData {
   volume_30d: string;
 }
 
-export type StatusType = 'CONNECTED' | 'CONNECTING' | 'ERROR';
+export type StatusType = 'CONNECTED' | 'CONNECTING' | 'UPDATED' | 'ERROR';
 
 export type SizeType = 'SMALL' | 'MEDIUM' | 'LARGE';
 

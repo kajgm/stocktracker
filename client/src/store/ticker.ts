@@ -8,6 +8,7 @@ interface State {
     api: StatusType;
     socket: StatusType;
   };
+  cptSocket: WebSocket | undefined;
 }
 
 const defaultTicker = {
@@ -22,7 +23,8 @@ const defaultTicker = {
 export const useTickerStore = defineStore('ticker', {
   state: (): State => ({
     tickerDataMap: new Map<string, TickerData>(),
-    status: { overall: 'CONNECTING', api: 'CONNECTING', socket: 'CONNECTING' }
+    status: { overall: 'CONNECTING', api: 'CONNECTING', socket: 'CONNECTING' },
+    cptSocket: undefined
   }),
   getters: {
     tickerValue(): (key: string) => TickerData {
@@ -48,6 +50,9 @@ export const useTickerStore = defineStore('ticker', {
     },
     socketStatus(): StatusType {
       return this.status.socket;
+    },
+    cryptoSocket(): WebSocket {
+      return this.cptSocket;
     }
   },
   actions: {
@@ -66,6 +71,9 @@ export const useTickerStore = defineStore('ticker', {
       } else {
         this.status.overall = 'CONNECTING';
       }
+    },
+    setSocket(socket: WebSocket | undefined) {
+      this.cptSocket = socket;
     },
     updateTickerData(key: string, tData: TickerData) {
       this.tickerDataMap.set(key, tData);

@@ -1,15 +1,14 @@
 import { useTickerStore } from '@/store/ticker.js';
 import { priceDirection } from '@/helpers/helpers.js';
-import { type StatusType, type TickerData, type WebsocketData } from '@/types/types.js';
+import { type TickerData, type WebsocketData } from '@/types/types.js';
 
 const CRYPTO_ENDPOINT = 'wss://ws-feed.exchange.coinbase.com';
 
 export function websocketConnect() {
   const tickerStore = useTickerStore();
-  tickerStore.setSocketStatus('CONNECTING' as StatusType);
+  tickerStore.setSocketStatus('CONNECTING');
   const socket = new WebSocket(CRYPTO_ENDPOINT);
   console.log('Socket Created!');
-
   socket.onopen = () => {
     socket.send(
       JSON.stringify({
@@ -49,10 +48,6 @@ export function websocketConnect() {
 
   socket.onclose = (e) => {
     console.log(e);
-    setTimeout(() => {
-      tickerStore.setSocketStatus('CONNECTING');
-      websocketConnect(); // Reconnect
-    }, 60000);
   };
 
   socket.onerror = (err) => {

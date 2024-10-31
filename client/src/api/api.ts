@@ -20,8 +20,12 @@ export function restApiPoll() {
   const date = new Date();
   const currentTime = (date.getUTCHours() - 4) * 60 + date.getUTCMinutes();
   const isWeekday = date.getDay() % 6 != 0;
-
-  if ((openHours <= currentTime && currentTime <= closeHours && isWeekday) || tickerStore.apiStatus != 'CONNECTED') {
+  console.log('test');
+  console.log(tickerStore.stockTickers);
+  if (
+    (openHours <= currentTime && currentTime <= closeHours && isWeekday) ||
+    (tickerStore.apiStatus != 'CONNECTED' && tickerStore.stockTickers.length > 0)
+  ) {
     axios
       .get(STOCK_ENDPOINT + tickerStore.stockTickers.toString() + '?apikey=' + process.env.FMP_KEY)
       .then((res) => {
