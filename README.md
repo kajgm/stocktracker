@@ -36,8 +36,6 @@ npm install
 
 ```
 FMP_KEY="<your_api_key>"
-STOCK_TICKERS="MSFT,AAPL,NVDA,AMD,INTC,AMZN"
-CRYPTO_TICKERS="ETH-USD,BTC-USD"
 ```
 
 ### Compile and Hot-Reload for Development
@@ -51,7 +49,7 @@ npm run dev
 
 > Run in another terminal
 
-```
+```sh
 cd server
 npm run dev
 ```
@@ -80,17 +78,25 @@ To deploy within Docker, please follow these steps:
 
 1. Install [Docker Engine](https://docs.docker.com/engine/install/)
 
-2. Build the dockerfile within the client directory
    > Tip: Run `sudo usermod -aG docker <user>` to avoid prefixing the following commands with sudo
 
-```
-docker build -t kajgm/stocktracker .
+2. Build the dockerfile within the client directory
+
+```sh
+docker build -t kajgm/stocktracker-client .
 ```
 
-3. Run the dockerfile
+3. Build the dockerfile within the client directory
 
+```sh
+docker build -t kajgm/stocktracker-server .
 ```
-docker run -d -p 8080:80 --name --restart always stocktracker-1 kajgm/stocktracker
+
+4. Run the client and server containers
+
+```sh
+docker run -d -p 8080:80 --name stocktracker-client --restart always kajgm/stocktracker-client
+docker run -d -p 3000:3000 --name stocktracker-server --restart always kajgm/stocktracker-server
 ```
 
 ## Deployment on Raspberry Pi
@@ -100,7 +106,7 @@ Ensure the Docker deployment steps from above are followed on the target Raspber
 1. (Optional) Install chromium browser version 88
    > For whatever reason the latest version of chromium-browser sometimes doesn't play nice. If you're running into issues with the next few commands, try installing this version.
 
-```
+```sh
 wget "http://archive.raspberrypi.org/debian/pool/main/c/chromium-browser/chromium-browser_88.0.4324.187-rpt1_armhf.deb"
 wget "http://archive.raspberrypi.org/debian/pool/main/c/chromium-browser/chromium-codecs-ffmpeg-extra_88.0.4324.187-rpt1_armhf.deb"
 apt install --no-install-recommends --allow-downgrades --allow-change-held-packages ./chromium-browser_88.0.4324.187-rpt1_armhf.deb ./chromium-codecs-ffmpeg-extra_88.0.4324.187-rpt1_armhf.deb
@@ -108,27 +114,18 @@ apt install --no-install-recommends --allow-downgrades --allow-change-held-packa
 
 2. If running these commands over ssh, export the display
 
-```
+```sh
 export DISPLAY=:0
 ```
 
 3. Run chromium in fullscreen mode
 
-```
+```sh
 chromium-browser --kiosk --app=http://localhost:8080/ --start-fullscreen --incognito
 ```
 
 > Alternatively, you may have to append `nohup` and `&` to run the command in the background (if executing via ssh):
 
-```
+```sh
 nohup chromium-browser --kiosk --app=http://localhost:8080/ --start-fullscreen --incognito &
-```
-
-### Troubleshooting
-
-- To prevent the screen from going to sleep, use the command (may have to use `export DISPLAY=:0` beforehand):
-
-```
-xset s 0
-xset -dpms
 ```
