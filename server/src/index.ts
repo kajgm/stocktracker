@@ -1,9 +1,5 @@
 import express from "express";
-import { Server } from "socket.io";
-// import http from "http";
 const app = express();
-// const server = http.createServer(app);
-// const io = new Server(server);
 const port = 3000;
 
 app.get("/api/get/tickers", (req, res) => {
@@ -54,13 +50,6 @@ app.get("/api/set/tickers", (req, res) => {
 
   res.send(resString);
 });
-
-// io.on("connection", (socket) => {
-//   console.log("a user connected");
-//   socket.on("disconnect", () => {
-//     console.log("user disconnected");
-//   });
-// });
 
 app.listen(port, () => {
   console.log("Stocktracker server listening on port " + port);
