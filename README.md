@@ -32,7 +32,7 @@ cd ../server
 npm install
 ```
 
-### Create a `.env` file within `client/` (using .env.template) and add parameters
+### Create a `.env` file within `/client` (using .env.template) and add parameters
 
 ```
 FMP_KEY="<your_api_key>"
@@ -80,13 +80,13 @@ To deploy within Docker, please follow these steps:
 
    > Tip: Run `sudo usermod -aG docker <user>` to avoid prefixing the following commands with sudo
 
-2. Build the dockerfile within the /client directory
+2. Build the dockerfile within the `/client` directory
 
 ```sh
 docker build -t kajgm/stocktracker-client .
 ```
 
-3. Build the dockerfile within the /server directory
+3. Build the dockerfile within the `/server` directory
 
 ```sh
 docker build -t kajgm/stocktracker-server .
