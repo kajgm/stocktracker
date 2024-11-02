@@ -1,93 +1,87 @@
 import { defineStore } from 'pinia';
-import { type TickerData, type StatusType, type TickerType } from '@/types/types.js';
+import type { TickerData, StatusType, TickerType } from '@/types/types.js';
+import { defaultTicker } from '@/types/types.js';
 
 interface State {
-  tickerDataMap: Map<string, TickerData>;
+  cryptoDataMap: Map<string, TickerData>;
+  stockDataMap: Map<string, TickerData>;
   status: {
     overall: StatusType;
-    api: StatusType;
-    socket: StatusType;
+    stock: StatusType;
+    crypto: StatusType;
   };
-  cptSocket: WebSocket | undefined;
+  cSocket: WebSocket | undefined;
 }
-
-const defaultTicker = {
-  curPrice: -1,
-  prevPrice: -1,
-  dayPercentage: -1,
-  dirFilter: 'fill-emerald-500 -rotate-90',
-  status: 'CONNECTING',
-  type: undefined
-} as TickerData;
 
 export const useTickerStore = defineStore('ticker', {
   state: (): State => ({
-    tickerDataMap: new Map<string, TickerData>(),
-    status: { overall: 'CONNECTING', api: 'CONNECTING', socket: 'CONNECTING' },
-    cptSocket: undefined
+    cryptoDataMap: new Map<string, TickerData>(),
+    stockDataMap: new Map<string, TickerData>(),
+    status: { overall: 'CONNECTING', stock: 'CONNECTING', crypto: 'CONNECTING' },
+    cSocket: undefined
   }),
   getters: {
-    tickerValue(): (key: string) => TickerData {
-      return (key: string) => this.tickerDataMap.get(key) || defaultTicker;
+    cryptoValue(): (key: string) => TickerData {
+      return (key: string) => this.cryptoDataMap.get(key) || defaultTicker;
     },
-    tickerData(): Map<string, TickerData> {
-      return this.tickerDataMap;
+    cryptoData(): Map<string, TickerData> {
+      return this.cryptoDataMap;
     },
-    tickerKeys(): string[] {
-      return Array.from(this.tickerDataMap.keys());
+    cryptoKeys(): string[] {
+      return Array.from(this.cryptoDataMap.keys());
     },
-    cryptoTickers(): string[] {
-      return [...this.tickerDataMap.entries()].filter(({ 1: v }) => v.type == 'CRYPTO').map(([k]) => k);
+    stockValue(): (key: string) => TickerData {
+      return (key: string) => this.stockDataMap.get(key) || defaultTicker;
     },
-    stockTickers(): string[] {
-      return [...this.tickerDataMap.entries()].filter(({ 1: v }) => v.type == 'STOCK').map(([k]) => k);
+    stockData(): Map<string, TickerData> {
+      return this.stockDataMap;
+    },
+    stockKeys(): string[] {
+      return Array.from(this.stockDataMap.keys());
+    },
+    cryptoSocket(): WebSocket {
+      return this.cSocket;
     },
     overallStatus(): StatusType {
       return this.status.overall;
     },
-    apiStatus(): StatusType {
-      return this.status.api;
+    stockStatus(): StatusType {
+      return this.status.stock;
     },
-    socketStatus(): StatusType {
-      return this.status.socket;
-    },
-    cryptoSocket(): WebSocket {
-      return this.cptSocket;
+    cryptoStatus(): StatusType {
+      return this.status.crypto;
     }
   },
   actions: {
-    setApiStatus(status: StatusType) {
-      this.status.api = status;
-      if (this.status.socket == 'CONNECTED' || this.status.api == 'CONNECTED') {
-        this.status.overall = 'CONNECTED';
-      } else {
-        this.status.overall = 'CONNECTING';
-      }
-    },
-    setSocketStatus(status: StatusType) {
-      this.status.socket = status;
-      if (this.status.socket == 'CONNECTED' || this.status.api == 'CONNECTED') {
+    setExtStatus(status: StatusType, type: TickerType) {
+      if (type == 'CRYPTO') this.status.crypto = status;
+      if (type == 'STOCK') this.status.stock = status;
+      if (this.status.crypto == 'CONNECTED' || this.status.stock == 'CONNECTED') {
         this.status.overall = 'CONNECTED';
       } else {
         this.status.overall = 'CONNECTING';
       }
     },
     setSocket(socket: WebSocket | undefined) {
-      this.cptSocket = socket;
+      this.cSocket = socket;
     },
-    updateTickerData(key: string, tData: TickerData) {
-      this.tickerDataMap.set(key, tData);
+    updateCryptoData(key: string, tData: TickerData) {
+      this.cryptoDataMap.set(key, tData);
+    },
+    updateStockData(key: string, tData: TickerData) {
+      this.stockDataMap.set(key, tData);
     },
     addNewTicker(id: string, type: TickerType, tData?: TickerData) {
       const tickerData = tData ? tData : defaultTicker;
       tickerData.type = type;
-      this.updateTickerData(id, tickerData);
+      if (type == 'CRYPTO') this.updateCryptoData(id, tickerData);
+      if (type == 'STOCK') this.updateStockData(id, tickerData);
     },
     clearCryptoTickers() {
-      this.tickerDataMap = new Map([...[...this.tickerDataMap].filter(([k, v]) => v.type != 'CRYPTO')]);
+      this.cryptoDataMap = new Map<string, TickerData>();
     },
     clearStockTickers() {
-      this.tickerDataMap = new Map([...[...this.tickerDataMap].filter(([k, v]) => v.type != 'STOCK')]);
+      this.stockDataMap = new Map<string, TickerData>();
     }
   }
 });

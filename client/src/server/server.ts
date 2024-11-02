@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useTickerStore } from '@/store/ticker.js';
-import { websocketConnect } from '@/socket/socket.js';
+import { coinbaseConnect } from '@/crypto/crypto.js';
 
 const SERVER_TIMEOUT = 1000;
 const SERVER_ENDPOINT = 'http://localhost:3000/api/get/tickers';
@@ -16,8 +16,8 @@ export function getUpdatedTickers() {
       const cryptoTcks = res.data['cryptoTickers'] as string;
       if (
         cryptoTcks &&
-        tickerStore.socketStatus != 'UPDATED' &&
-        cryptoTcks.split(',').toString() != tickerStore.cryptoTickers.toString()
+        tickerStore.cryptoStatus != 'UPDATED' &&
+        cryptoTcks.split(',').toString() != tickerStore.cryptoKeys.toString()
       ) {
         cryptoUpdatedFlag = true;
         tickerStore.clearCryptoTickers();
@@ -30,8 +30,8 @@ export function getUpdatedTickers() {
       const stockTcks = res.data['stockTickers'] as string;
       if (
         stockTcks &&
-        tickerStore.apiStatus != 'UPDATED' &&
-        stockTcks.split(',').toString() != tickerStore.stockTickers.toString()
+        tickerStore.stockStatus != 'UPDATED' &&
+        stockTcks.split(',').toString() != tickerStore.stockKeys.toString()
       ) {
         stockUpdatedFlag = true;
         tickerStore.clearStockTickers();
@@ -44,11 +44,11 @@ export function getUpdatedTickers() {
       console.log('Failed to contact server!', err);
     })
     .finally(() => {
-      if (stockUpdatedFlag) {
-        tickerStore.setApiStatus('UPDATED');
-      }
       if (cryptoUpdatedFlag) {
-        tickerStore.setSocketStatus('UPDATED');
+        tickerStore.setExtStatus('UPDATED', 'CRYPTO');
+      }
+      if (stockUpdatedFlag) {
+        tickerStore.setExtStatus('UPDATED', 'STOCK');
       }
     });
 }
@@ -57,9 +57,9 @@ export function pollUpdatedTickers() {
   const tickerStore = useTickerStore();
   getUpdatedTickers();
 
-  if (tickerStore.cryptoSocket && tickerStore.socketStatus == 'UPDATED') {
+  if (tickerStore.cryptoSocket && tickerStore.cryptoStatus == 'UPDATED') {
     tickerStore.cryptoSocket.close();
-    const newSocket = websocketConnect();
+    const newSocket = coinbaseConnect();
     tickerStore.setSocket(newSocket);
   }
 

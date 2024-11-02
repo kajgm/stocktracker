@@ -72,3 +72,12 @@ export interface SizeInfo {
 export type TypeSizeMap = {
   [key in SizeType]: SizeInfo;
 };
+
+export const defaultTicker = {
+  curPrice: -1,
+  prevPrice: -1,
+  dayPercentage: -1,
+  dirFilter: 'fill-emerald-500 -rotate-90',
+  status: 'CONNECTING',
+  type: undefined
+} as TickerData;

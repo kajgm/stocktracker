@@ -3,9 +3,11 @@ import { useTickerStore } from '@/store/ticker';
 import { concatNumber } from '@/helpers/helpers';
 import { computed } from 'vue';
 import type { TickerData, SizeType, TypeSizeMap } from '@/types/types';
+import { defaultTicker } from '@/types/types';
 
-const { tickerId, boxSize, rLink } = defineProps<{
+const { tickerId, tickerType, boxSize, rLink } = defineProps<{
   tickerId: string;
+  tickerType: string;
   boxSize: SizeType;
   rLink: string;
 }>();
@@ -13,7 +15,9 @@ const { tickerId, boxSize, rLink } = defineProps<{
 const tickerStore = useTickerStore();
 
 const ticker = computed<TickerData>(() => {
-  return tickerStore.tickerValue(tickerId);
+  if (tickerType == 'CRYPTO') return tickerStore.cryptoValue(tickerId);
+  if (tickerType == 'STOCK') return tickerStore.stockValue(tickerId);
+  else return defaultTicker;
 });
 
 const SizeMap: TypeSizeMap = {
@@ -62,8 +66,7 @@ const sInfo = SizeMap[boxSize];
             <div class="inline-flex items-center text-center" :class="sInfo.padding">
               <svg class="w-auto" :class="[ticker.dirFilter, sInfo.iconSize]" viewBox="0 0 31.417 31.416">
                 <path
-                  d="M29.462 15.707a3.004 3.004 0 0 1-1.474 2.583L6.479 30.999c-.47.275-.998.417-1.526.417a2.98 2.98 0 0 1-1.487-.396 2.997 2.997 0 0 1-1.513-2.604V2.998A3.002 3.002 0 0 1 6.479.415l21.509 12.709a2.997 2.997 0 0 1 1.474 2.583z"
-                />
+                  d="M29.462 15.707a3.004 3.004 0 0 1-1.474 2.583L6.479 30.999c-.47.275-.998.417-1.526.417a2.98 2.98 0 0 1-1.487-.396 2.997 2.997 0 0 1-1.513-2.604V2.998A3.002 3.002 0 0 1 6.479.415l21.509 12.709a2.997 2.997 0 0 1 1.474 2.583z" />
               </svg>
               <h1 class="text-emerald-500 font-medium px-1" :class="sInfo.price">
                 ${{ concatNumber(ticker.curPrice, 2, true, false) }}
@@ -73,10 +76,8 @@ const sInfo = SizeMap[boxSize];
               <h1 class="font-medium text-left inline-block px-1 w-1/2" :class="sInfo.info">
                 {{ concatNumber(ticker.volume, 2, false, true) }}
               </h1>
-              <h1
-                class="font-medium text-right inline-block px-1 w-1/2"
-                :class="[ticker.dayPercentage >= 0 ? 'text-emerald-500' : 'text-red-500', sInfo.info]"
-              >
+              <h1 class="font-medium text-right inline-block px-1 w-1/2"
+                :class="[ticker.dayPercentage >= 0 ? 'text-emerald-500' : 'text-red-500', sInfo.info]">
                 {{
                   Math.abs(ticker.dayPercentage) > 0.1
                     ? ticker.dayPercentage.toPrecision(3)
