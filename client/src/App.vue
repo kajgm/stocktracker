@@ -32,7 +32,7 @@ onMounted(() => {
 
 <template>
   <div class="flex h-screen">
-    <div v-if="cryptoTickers.length > 0 || stockTickers.length > 0" class="w-pi-w h-pi-h m-auto">
+    <div v-if="cryptoTickers || stockTickers" class="w-pi-w h-pi-h m-auto">
       <RouterView />
     </div>
     <div v-else>
