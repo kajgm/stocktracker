@@ -101,6 +101,7 @@ docker network create -d bridge backend-net
 ```
 
 6. Run the client, server, and database containers
+   > Note: If running on a raspberry pi, you will need to download an alternative mongodb image. Please see steps under [Deployment on Raspberry Pi](#deployment-on-raspberry-pi)
 
 ```sh
 docker run -d -p 8080:80 --name stocktracker-client --network backend-net --restart always kajgm/stocktracker-client
@@ -112,14 +113,7 @@ docker run -d --name mongodb-server --network backend-net -v stocktracker:/data/
 
 Ensure the Docker deployment steps from above are followed on the target Raspberry Pi
 
-1. (Optional) Install chromium browser version 88
-   > For whatever reason the latest version of chromium-browser sometimes doesn't play nice. If you're running into issues with the next few commands, try installing this version.
-
-```sh
-wget "http://archive.raspberrypi.org/debian/pool/main/c/chromium-browser/chromium-browser_88.0.4324.187-rpt1_armhf.deb"
-wget "http://archive.raspberrypi.org/debian/pool/main/c/chromium-browser/chromium-codecs-ffmpeg-extra_88.0.4324.187-rpt1_armhf.deb"
-apt install --no-install-recommends --allow-downgrades --allow-change-held-packages ./chromium-browser_88.0.4324.187-rpt1_armhf.deb ./chromium-codecs-ffmpeg-extra_88.0.4324.187-rpt1_armhf.deb
-```
+1. Mongodb currently does not support the ARM architecure used on raspberry pis. Please use the alternative image provided by themattman [mongodb-raspberrypi-docker](https://github.com/themattman/mongodb-raspberrypi-docker?tab=readme-ov-file#how-to-install)
 
 2. If running these commands over ssh, export the display
 
@@ -139,8 +133,8 @@ chromium-browser --kiosk --app=http://localhost:8080/ --start-fullscreen --incog
 nohup chromium-browser --kiosk --app=http://localhost:8080/ --start-fullscreen --incognito &
 ```
 
-As an alternative, a startup script has been provided in the root directory `./startup`. Ensure that the script is executable before running or referencing in any automated startup routine.
+As an alternative, a startup script has been provided in the root directory `./startup.sh`. Ensure that the script is executable before running or referencing in any automated startup routine.
 
 ```sh
-chmod +x <username>
+chmod +x <username> ./startup.sh
 ```
