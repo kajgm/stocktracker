@@ -1,36 +1,35 @@
 import { useTickerStore } from '@/store/ticker.js';
 import { priceDirection } from '@/helpers/helpers.js';
-import { type StatusType, type TickerData, type WebsocketData } from '@/types/types.js';
+import { type TickerData, type WebsocketData } from '@/types/types.js';
 
 const CRYPTO_ENDPOINT = 'wss://ws-feed.exchange.coinbase.com';
 
-export function websocketConnect() {
+export function coinbaseConnect() {
   const tickerStore = useTickerStore();
-  tickerStore.setSocketStatus('CONNECTING' as StatusType);
+  tickerStore.setExtStatus('CONNECTING', 'CRYPTO');
   const socket = new WebSocket(CRYPTO_ENDPOINT);
   console.log('Socket Created!');
-
   socket.onopen = () => {
     socket.send(
       JSON.stringify({
         type: 'subscribe',
-        product_ids: tickerStore.cryptoTickers,
+        product_ids: tickerStore.cryptoKeys,
         channels: [
           'heartbeat',
           {
             name: 'ticker',
-            product_ids: tickerStore.cryptoTickers
+            product_ids: tickerStore.cryptoKeys
           }
         ]
       })
     );
-    tickerStore.setSocketStatus('CONNECTED');
+    tickerStore.setExtStatus('CONNECTED', 'CRYPTO');
   };
 
   socket.onmessage = (e: MessageEvent<unknown>) => {
     const msg = JSON.parse(e.data as string) as WebsocketData;
     if (msg['type'] == 'ticker') {
-      const prevRes = tickerStore.tickerValue(msg.product_id);
+      const prevRes = tickerStore.cryptoValue(msg.product_id);
       const curPrice = parseFloat(msg.price);
       const dayPrice = parseFloat(msg.open_24h);
       const tickerValue = {
@@ -40,23 +39,22 @@ export function websocketConnect() {
         dayPercentage: ((curPrice - dayPrice) / dayPrice) * 100,
         prevPrice: prevRes.curPrice,
         dirFilter: priceDirection(prevRes.dirFilter, curPrice, prevRes.prevPrice),
-        status: 'CONNECTED'
+        status: 'CONNECTED',
+        type: 'CRYPTO'
       } as TickerData;
-      tickerStore.updateTickerData(msg.product_id, tickerValue);
+      tickerStore.updateCryptoData(msg.product_id, tickerValue);
     }
   };
 
   socket.onclose = (e) => {
     console.log(e);
-    setTimeout(() => {
-      tickerStore.setSocketStatus('CONNECTING');
-      websocketConnect(); // Reconnect
-    }, 60000);
   };
 
   socket.onerror = (err) => {
     console.log(err);
-    tickerStore.setSocketStatus('ERROR');
+    tickerStore.setExtStatus('ERROR', 'CRYPTO');
     socket.close();
   };
+
+  return socket;
 }

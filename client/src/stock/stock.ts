@@ -15,19 +15,22 @@ const STOCK_ENDPOINT = 'https://financialmodelingprep.com/api/v3/quote/';
 const openHours = 570; // 9 * 60 + 30
 const closeHours = 960; // 16 * 60
 
-export function restApiPoll() {
+export function fmpConnect() {
   const tickerStore = useTickerStore();
   const date = new Date();
   const currentTime = (date.getUTCHours() - 4) * 60 + date.getUTCMinutes();
   const isWeekday = date.getDay() % 6 != 0;
 
-  if ((openHours <= currentTime && currentTime <= closeHours && isWeekday) || tickerStore.apiStatus != 'CONNECTED') {
+  if (
+    (openHours <= currentTime && currentTime <= closeHours && isWeekday) ||
+    (tickerStore.stockStatus != 'CONNECTED' && tickerStore.stockKeys.length > 0)
+  ) {
     axios
-      .get(STOCK_ENDPOINT + tickerStore.stockTickers.toString() + '?apikey=' + process.env.FMP_KEY)
+      .get(STOCK_ENDPOINT + tickerStore.stockKeys.toString() + '?apikey=' + process.env.FMP_KEY)
       .then((res) => {
         for (const ticker of res.data) {
           const apiTicker = ticker as ApiRequestData;
-          const prevRes = tickerStore.tickerValue(apiTicker.symbol);
+          const prevRes = tickerStore.stockValue(apiTicker.symbol);
           const stock = {
             id: apiTicker.symbol,
             curPrice: apiTicker.price,
@@ -38,22 +41,23 @@ export function restApiPoll() {
               prevRes.curPrice == -1
                 ? priceDirection(prevRes.dirFilter, apiTicker.changesPercentage, 0)
                 : priceDirection(prevRes.dirFilter, apiTicker.price, prevRes.prevPrice),
-            status: 'CONNECTED'
+            status: 'CONNECTED',
+            type: 'STOCK'
           } as TickerData;
-          tickerStore.updateTickerData(apiTicker.symbol, stock);
+          tickerStore.updateStockData(apiTicker.symbol, stock);
         }
       })
       .catch((error) => {
         console.log(error);
-        tickerStore.setApiStatus('ERROR');
+        tickerStore.setExtStatus('ERROR', 'STOCK');
       })
       .finally(() => {
-        tickerStore.setApiStatus('CONNECTED');
+        tickerStore.setExtStatus('CONNECTED', 'STOCK');
       });
     console.log('Called FMP api');
   } else {
-    console.log('Skipped api call, outside trading hours');
+    console.log('Skipped api call, outside trading hours or no stocks provided');
   }
 
-  setTimeout(restApiPoll, API_TIMEOUT);
+  setTimeout(fmpConnect, API_TIMEOUT);
 }

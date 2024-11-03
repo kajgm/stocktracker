@@ -13,6 +13,9 @@ on:
 jobs:
   lint:
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ./client
     timeout-minutes: 5
     strategy:
       matrix:
@@ -21,18 +24,22 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-      - run: npm ci
+          node-version-file: ".nvmrc"
+          cache: "npm"
+      - name: Install
+        run: npm ci
       - name: Lint
         run: npm run lint
 
   build:
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ./client
     env:
-      FMP_KEY: ''
-      STOCK_TICKERS: 'MSFT,AAPL,NVDA,AMD,INTC,AMZN'
-      CRYPTO_TICKERS: 'ETH-USD,BTC-USD'
+      FMP_KEY: ""
+      STOCK_TICKERS: "MSFT,AAPL,NVDA,AMD,INTC,AMZN"
+      CRYPTO_TICKERS: "ETH-USD,BTC-USD"
     timeout-minutes: 10
     strategy:
       matrix:
@@ -53,8 +60,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci
+          cache: "npm"
+      - name: Install
+        run: npm ci
       - name: Build
         run: npm run build
       - name: Test

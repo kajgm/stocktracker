@@ -2,9 +2,7 @@ import vue from '@vitejs/plugin-vue';
 import EnvironmentPlugin from 'vite-plugin-environment';
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { version } = require('./package.json');
+import { version } from './package.json';
 
 export default defineConfig({
   plugins: [
