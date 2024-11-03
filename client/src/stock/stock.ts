@@ -15,16 +15,13 @@ const STOCK_ENDPOINT = 'https://financialmodelingprep.com/api/v3/quote/';
 const openHours = 570; // 9 * 60 + 30
 const closeHours = 960; // 16 * 60
 
-export function fmpConnect() {
+export function fmpQuery() {
   const tickerStore = useTickerStore();
   const date = new Date();
   const currentTime = (date.getUTCHours() - 4) * 60 + date.getUTCMinutes();
   const isWeekday = date.getDay() % 6 != 0;
 
-  if (
-    (openHours <= currentTime && currentTime <= closeHours && isWeekday) ||
-    (tickerStore.stockStatus != 'CONNECTED' && tickerStore.stockKeys.length > 0)
-  ) {
+  if ((openHours <= currentTime && currentTime <= closeHours && isWeekday) || tickerStore.stockKeys.length > 0) {
     axios
       .get(STOCK_ENDPOINT + tickerStore.stockKeys.toString() + '?apikey=' + process.env.FMP_KEY)
       .then((res) => {
@@ -58,6 +55,9 @@ export function fmpConnect() {
   } else {
     console.log('Skipped api call, outside trading hours or no stocks provided');
   }
+}
 
+export function fmpConnect() {
+  fmpQuery();
   setTimeout(fmpConnect, API_TIMEOUT);
 }

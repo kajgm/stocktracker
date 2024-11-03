@@ -1,22 +1,17 @@
 <script setup lang="ts">
-import { useTickerStore } from '@/store/ticker';
-import { computed } from 'vue';
-import type { TickerData, SizeType } from '@/types/types';
+import type { SizeType } from '@/types/types';
 import TickerBox from '@/components/ticker/TickerBox.vue';
 
-const { tickerId } = defineProps<{
+const { tickerId, tickerType } = defineProps<{
   tickerId: string;
+  tickerType: string;
 }>();
 
-const tickerStore = useTickerStore();
-const ticker = computed<TickerData>(() => {
-  return tickerStore.tickerValue(tickerId);
-});
 const boxSize = 'LARGE' as SizeType;
 </script>
 
 <template>
   <div class="flex flex-wrap justify-center m-auto w-full h-full">
-    <TickerBox :ticker-id="ticker.id" :box-size="boxSize" r-link="/"></TickerBox>
+    <TickerBox :ticker-id="tickerId" :ticker-type="tickerType" :box-size="boxSize" r-link="/"></TickerBox>
   </div>
 </template>

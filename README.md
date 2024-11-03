@@ -80,23 +80,32 @@ To deploy within Docker, please follow these steps:
 
    > Tip: Run `sudo usermod -aG docker <user>` to avoid prefixing the following commands with sudo
 
-2. Build the dockerfile within the `/client` directory
+2. Create the `.env` files from the templates in `/client` and `/server`
+
+3. Build the dockerfile within the `/client` directory
 
 ```sh
 docker build -t kajgm/stocktracker-client .
 ```
 
-3. Build the dockerfile within the `/server` directory
+4. Build the dockerfile within the `/server` directory
 
 ```sh
 docker build -t kajgm/stocktracker-server .
 ```
 
-4. Run the client and server containers
+5. Create a network for these containers
 
 ```sh
-docker run -d -p 8080:80 --name stocktracker-client --restart always kajgm/stocktracker-client
-docker run -d -p 3000:3000 --name stocktracker-server --restart always kajgm/stocktracker-server
+docker network create -d bridge backend-net
+```
+
+6. Run the client, server, and database containers
+
+```sh
+docker run -d -p 8080:80 --name stocktracker-client --network backend-net --restart always kajgm/stocktracker-client
+docker run -d -p 3000:3000 --name stocktracker-server --network backend-net --env-file=./.env --restart always kajgm/stocktracker-server
+docker run -d --name mongodb-server --network backend-net -v stocktracker:/data/db --restart always mongo
 ```
 
 ## Deployment on Raspberry Pi
@@ -128,4 +137,10 @@ chromium-browser --kiosk --app=http://localhost:8080/ --start-fullscreen --incog
 
 ```sh
 nohup chromium-browser --kiosk --app=http://localhost:8080/ --start-fullscreen --incognito &
+```
+
+As an alternative, a startup script has been provided in the root directory `./startup`. Ensure that the script is executable before running or referencing in any automated startup routine.
+
+```sh
+chmod +x <username>
 ```

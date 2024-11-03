@@ -1,16 +1,16 @@
 import axios from 'axios';
 import { useTickerStore } from '@/store/ticker.js';
 import { coinbaseConnect } from '@/crypto/crypto.js';
+import { fmpQuery } from '@/stock/stock.js';
 
 const SERVER_TIMEOUT = 1000;
-const SERVER_ENDPOINT = 'http://localhost:3000/api/get/tickers';
 
 export function getUpdatedTickers() {
   const tickerStore = useTickerStore();
   let cryptoUpdatedFlag = false;
   let stockUpdatedFlag = false;
   axios
-    .get(SERVER_ENDPOINT)
+    .get(process.env.EXPRESS_URI!)
     .then((res) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const cryptoTcks = res.data['cryptoTickers'] as string;
@@ -61,6 +61,10 @@ export function pollUpdatedTickers() {
     tickerStore.cryptoSocket.close();
     const newSocket = coinbaseConnect();
     tickerStore.setSocket(newSocket);
+  }
+
+  if (tickerStore.stockStatus == 'UPDATED') {
+    fmpQuery();
   }
 
   setTimeout(pollUpdatedTickers, SERVER_TIMEOUT);

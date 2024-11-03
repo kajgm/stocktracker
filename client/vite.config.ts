@@ -2,18 +2,9 @@ import vue from '@vitejs/plugin-vue';
 import EnvironmentPlugin from 'vite-plugin-environment';
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import { version } from './package.json';
 
 export default defineConfig({
-  plugins: [
-    vue(),
-    EnvironmentPlugin({
-      FMP_KEY: null,
-      STOCK_TICKERS: 'MSFT,AAPL,NVDA,AMD,INTC,AMZN',
-      CRYPTO_TICKERS: 'ETH-USD,BTC-USD',
-      appVersion: version
-    })
-  ],
+  plugins: [vue(), EnvironmentPlugin('all', { prefix: '' })],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),

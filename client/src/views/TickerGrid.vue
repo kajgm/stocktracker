@@ -4,7 +4,6 @@ import { useTickerStore } from '@/store/ticker';
 import { type SizeType } from '@/types/types';
 import TickerBox from '@/components/ticker/TickerBox.vue';
 
-const appVersion = process.env.appVersion;
 const tickerStore = useTickerStore();
 const cryptoIds = computed<string[]>(() => {
   return tickerStore.cryptoKeys;
@@ -20,7 +19,6 @@ const boxSize = 'SMALL' as SizeType;
     <h1 class="font-medium text-4xl">Connecting...</h1>
   </div>
   <div v-else-if="tickerStore.status.overall == 'CONNECTED'" class="flex flex-wrap justify-center m-auto w-full h-full">
-    <div class="absolute left-[calc(50%-16px)] top-[calc(50%-8px)] text-xs text-zinc-600">v{{ appVersion }}</div>
     <div v-for="id in cryptoIds" :key="id" class="w-1/2 h-1/2">
       <TickerBox :ticker-id="id" ticker-type="CRYPTO" :box-size="boxSize" :r-link="id"></TickerBox>
     </div>
