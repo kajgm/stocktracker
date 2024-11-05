@@ -21,7 +21,10 @@ export function fmpQuery() {
   const currentTime = (date.getUTCHours() - 4) * 60 + date.getUTCMinutes();
   const isWeekday = date.getDay() % 6 != 0;
 
-  if ((openHours <= currentTime && currentTime <= closeHours && isWeekday) || tickerStore.stockKeys.length > 0) {
+  if (
+    ((openHours <= currentTime && currentTime <= closeHours && isWeekday) || tickerStore.stockStatus == 'UPDATED') &&
+    tickerStore.stockKeys.length > 0
+  ) {
     axios
       .get(STOCK_ENDPOINT + tickerStore.stockKeys.toString() + '?apikey=' + process.env.FMP_KEY)
       .then((res) => {
