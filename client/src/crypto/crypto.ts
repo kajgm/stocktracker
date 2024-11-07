@@ -48,6 +48,8 @@ export function coinbaseConnect() {
 
   socket.onclose = (e) => {
     console.log(e);
+    const newSocket = coinbaseConnect();
+    tickerStore.setSocket(newSocket);
   };
 
   socket.onerror = (err) => {

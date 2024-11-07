@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { useTickerStore } from '@/store/ticker.js';
-import { coinbaseConnect } from '@/crypto/crypto.js';
 import { fmpQuery } from '@/stock/stock.js';
 
 const SERVER_TIMEOUT = 1000;
@@ -59,8 +58,6 @@ export function pollUpdatedTickers() {
 
   if (tickerStore.cryptoSocket && tickerStore.cryptoStatus == 'UPDATED') {
     tickerStore.cryptoSocket.close();
-    const newSocket = coinbaseConnect();
-    tickerStore.setSocket(newSocket);
   }
 
   if (tickerStore.stockStatus == 'UPDATED') {
