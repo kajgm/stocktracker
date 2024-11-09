@@ -39,8 +39,8 @@ export function getUpdatedTickers() {
         }
       }
     })
-    .catch((err) => {
-      console.log('Failed to contact server!', err);
+    .catch((_err) => {
+      console.log('Failed to contact server!');
     })
     .finally(() => {
       if (cryptoUpdatedFlag) {

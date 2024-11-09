@@ -6,7 +6,7 @@ const { tickerId, tickerType } = defineProps<{
   tickerId: string;
   tickerType: string;
 }>();
-
+console.log(tickerType);
 const boxSize = 'LARGE' as SizeType;
 </script>
 

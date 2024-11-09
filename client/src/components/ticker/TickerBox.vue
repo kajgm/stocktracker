@@ -53,7 +53,7 @@ const sInfo = SizeMap[boxSize];
 <template>
   <div class="p-1.5 w-full h-full">
     <div class="bg-zinc-800 rounded-2xl w-full h-full overflow-hidden">
-      <RouterLink :id="ticker.id" :ticker-type="tickerType" :to="rLink">
+      <RouterLink :id="ticker.id" :ticker-type="ticker.type" :to="rLink">
         <div class="p-2 h-full w-full flex flex-wrap flex-col">
           <h1 class="font-medium" :class="sInfo.name">{{ ticker.id }}</h1>
           <div v-if="ticker.status == 'CONNECTING'">

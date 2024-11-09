@@ -16,7 +16,11 @@ app.use(morgan('dev'));
 app.use('/api', tickerRoutes);
 
 app.listen(PORT, () => {
-  connectDB().then(() => {
-    console.log(`Stocktracker server listening on port ${PORT}`);
-  });
+  if (process.env.DB) {
+    connectDB().then(() => {
+      console.log(`Stocktracker server listening on port ${PORT}`);
+    });
+  } else {
+    console.log('Database disabled, running express server only');
+  }
 });

@@ -10,7 +10,7 @@ const routes = [
     meta: { title: 'Home' }
   },
   {
-    path: '/:tickerId',
+    path: '/:tickerType/:tickerId',
     component: Chart,
     name: 'chart',
     props: true,
