@@ -1,18 +1,13 @@
 import { Router } from 'express';
-import { Cryptos, Stocks } from '../models/Tickers';
+import { Crypto } from '../models/Crypto';
+import { Stock } from '../models/Stock';
+import { getTrackedTickers } from 'helpers/helpers';
 
 const router = Router();
 
 router.all('/get/tickers', async (req, res) => {
   try {
-    let stock = req.app.get('stockTickers');
-    let crypto = req.app.get('cryptoTickers');
-
-    if (!stock && !crypto && process.env.DB) {
-      console.log('Did not find any set tickers in express, querying mongodb');
-      stock = (await Stocks.find()).map((ticker) => ticker.stock).toString();
-      crypto = (await Cryptos.find()).map((ticker) => ticker.crypto).toString();
-    }
+    const { stock, crypto } = await getTrackedTickers(req.app);
 
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET');
@@ -32,11 +27,11 @@ router.all('/set/tickers', async (req, res) => {
 
     if (cryptoTickers != undefined) {
       if (process.env.DB) {
-        await Cryptos.deleteMany({});
+        await Crypto.deleteMany({});
         const tickerArr = cryptoTickers.split(',');
         for (const ticker of tickerArr) {
           console.log(ticker);
-          await Cryptos.create({ crypto: ticker });
+          await Crypto.create({ id: ticker });
         }
       }
       req.app.set('cryptoTickers', cryptoTickers);
@@ -45,10 +40,10 @@ router.all('/set/tickers', async (req, res) => {
 
     if (stockTickers != undefined) {
       if (process.env.DB) {
-        await Stocks.deleteMany({});
+        await Stock.deleteMany({});
         const tickerArr = stockTickers.split(',');
         for (const ticker of tickerArr) {
-          await Stocks.create({ stock: ticker });
+          await Stock.create({ id: ticker });
         }
       }
       req.app.set('stockTickers', stockTickers);
