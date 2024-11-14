@@ -48,9 +48,18 @@ export function coinbaseConnect() {
 
   socket.onclose = (e) => {
     console.log(e);
-    console.log('Socket closing, opening new socket');
-    const newSocket = coinbaseConnect();
-    tickerStore.setSocket(newSocket);
+    if (tickerStore.cryptoStatus === 'UPDATED') {
+      console.log('Socket closing, opening new socket');
+      const newSocket = coinbaseConnect();
+      tickerStore.setSocket(newSocket);
+    } else {
+      console.log('Waiting 10 seconds to open new socket');
+      setTimeout(() => {
+        console.log('Socket closing, opening new socket');
+        const newSocket = coinbaseConnect();
+        tickerStore.setSocket(newSocket);
+      }, 10000);
+    }
   };
 
   socket.onerror = (err) => {
