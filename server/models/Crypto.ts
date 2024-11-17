@@ -1,73 +1,73 @@
 import { Schema, model } from 'mongoose';
 
 const cryptoSchema = new Schema({
-  best_ask: {
-    type: String,
-    required: true
-  },
-  best_ask_size: {
-    type: String,
-    required: true
-  },
-  best_bid: {
-    type: String,
-    required: true
-  },
-  best_bid_size: {
-    type: String,
-    required: true
-  },
-  high_24h: {
-    type: String,
-    required: true
-  },
-  last_size: {
-    type: String,
-    required: true
-  },
-  low_24h: {
-    type: String,
-    required: true
-  },
-  open_24h: {
-    type: String,
-    required: true
-  },
-  price: {
-    type: String,
-    required: true
-  },
   product_id: {
     type: String,
     required: true
   },
+  best_ask: {
+    type: String,
+    required: false
+  },
+  best_ask_size: {
+    type: String,
+    required: false
+  },
+  best_bid: {
+    type: String,
+    required: false
+  },
+  best_bid_size: {
+    type: String,
+    required: false
+  },
+  high_24h: {
+    type: String,
+    required: false
+  },
+  last_size: {
+    type: String,
+    required: false
+  },
+  low_24h: {
+    type: String,
+    required: false
+  },
+  open_24h: {
+    type: String,
+    required: false
+  },
+  price: {
+    type: String,
+    required: false
+  },
   sequence: {
     type: Number,
-    required: true
+    required: false
   },
   side: {
     type: String,
-    required: true
+    required: false
   },
   time: {
     type: String,
-    required: true
+    required: false
   },
   trade_id: {
     type: Number,
-    required: true
+    required: false
   },
   type: {
     type: String,
-    required: true
+    required: false
   },
   volume_24h: {
     type: String,
-    required: true
+    required: false
   },
   volume_30d: {
     type: String,
-    required: true
+    required: false
   }
 });
 

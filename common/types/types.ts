@@ -1,7 +1,7 @@
-export type TickerType = 'STOCK' | 'CRYPTO' | undefined;
+export type TickerType = "STOCK" | "CRYPTO" | undefined;
 
 export interface TickerData {
-  id: string;
+  symbol: string;
   curPrice: number;
   volume: number;
   prevPrice: number;
@@ -56,9 +56,9 @@ export interface WebsocketData {
   volume_30d: string;
 }
 
-export type StatusType = 'CONNECTED' | 'CONNECTING' | 'UPDATED' | 'ERROR';
+export type StatusType = "CONNECTED" | "CONNECTING" | "UPDATED" | "ERROR";
 
-export type SizeType = 'SMALL' | 'MEDIUM' | 'LARGE';
+export type SizeType = "SMALL" | "MEDIUM" | "LARGE";
 
 export interface SizeInfo {
   name: string;
@@ -77,7 +77,7 @@ export const defaultTicker = {
   curPrice: -1,
   prevPrice: -1,
   dayPercentage: -1,
-  dirFilter: 'fill-emerald-500 -rotate-90',
-  status: 'CONNECTING',
-  type: undefined
+  dirFilter: "fill-emerald-500 -rotate-90",
+  status: "CONNECTING",
+  type: undefined,
 } as TickerData;

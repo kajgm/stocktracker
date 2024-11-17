@@ -1,23 +1,25 @@
-import { Crypto } from '../models/Crypto';
-import { getTrackedTickers } from 'helpers/helpers';
-import type { Express } from 'express';
-import type { WebsocketData } from '../../common/types/types';
+import { Crypto } from '../models/Crypto.js';
+import { getTrackedTickers } from '../helpers/helpers.js';
+import type { WebsocketData } from '../../common/types/types.js';
 
-const CRYPTO_ENDPOINT = process.env.CRYPTO_ENDPOINT || 'wss://ws-feed.exchange.coinbase.com';
-
-export function createDataSocket(app: Express, tickers: string) {
-  const socket = new WebSocket(CRYPTO_ENDPOINT);
-  console.log('Socket Created!');
+async function createDataSocket(endpoint: string) {
+  const { cryptoTickers } = await getTrackedTickers();
+  if (cryptoTickers === '') {
+    console.log('No tickers found, skipping socket creation');
+    return;
+  }
+  const socket = new WebSocket(endpoint);
+  console.log(`Socket Created with tickers: ${cryptoTickers}`);
   socket.onopen = () => {
     socket.send(
       JSON.stringify({
         type: 'subscribe',
-        product_ids: tickers,
+        product_ids: cryptoTickers,
         channels: [
           'heartbeat',
           {
             name: 'ticker',
-            product_ids: tickers
+            product_ids: cryptoTickers
           }
         ]
       })
@@ -27,19 +29,18 @@ export function createDataSocket(app: Express, tickers: string) {
   socket.onmessage = async (e: MessageEvent<unknown>) => {
     const msg = JSON.parse(e.data as string) as WebsocketData;
     if (msg['type'] === 'ticker') {
-      const query = {};
-      const update = { msg };
-      const options = { upsert: true, new: true };
-      await Crypto.findOneAndUpdate(query, update, options);
+      const filter = { product_id: msg['product_id'] };
+      const update = { ...msg };
+      const options = { upsert: true };
+      await Crypto.findOneAndUpdate(filter, update, options);
     }
   };
 
   socket.onclose = (e) => {
     console.log(e);
     console.log('Socket closing, opening new socket');
-    setTimeout(async () => {
-      const { crypto } = await getTrackedTickers(app);
-      createDataSocket(app, crypto);
+    setTimeout(() => {
+      createDataSocket(endpoint);
     }, 10000);
   };
 
@@ -47,4 +48,8 @@ export function createDataSocket(app: Express, tickers: string) {
     console.log(err);
     socket.close();
   };
+
+  return socket;
 }
+
+export default createDataSocket;

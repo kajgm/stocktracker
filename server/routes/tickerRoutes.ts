@@ -1,18 +1,18 @@
 import { Router } from 'express';
-import { Crypto } from '../models/Crypto';
-import { Stock } from '../models/Stock';
-import { getTrackedTickers } from 'helpers/helpers';
+import { Crypto } from '../models/Crypto.js';
+import { Stock } from '../models/Stock.js';
+import { getTrackedTickers } from '../helpers/helpers.js';
 
 const router = Router();
 
-router.all('/get/tickers', async (req, res) => {
+router.all('/get/tickers', async (_req, res) => {
   try {
-    const { stock, crypto } = await getTrackedTickers(req.app);
+    const { stockTickers, cryptoTickers } = await getTrackedTickers();
 
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.json({ stockTickers: stock, cryptoTickers: crypto });
+    res.json({ stockTickers: stockTickers.toString(), cryptoTickers: cryptoTickers.toString() });
   } catch (e) {
     console.log(e);
   }
@@ -31,7 +31,7 @@ router.all('/set/tickers', async (req, res) => {
         const tickerArr = cryptoTickers.split(',');
         for (const ticker of tickerArr) {
           console.log(ticker);
-          await Crypto.create({ id: ticker });
+          await Crypto.create({ product_id: ticker });
         }
       }
       req.app.set('cryptoTickers', cryptoTickers);
@@ -43,7 +43,7 @@ router.all('/set/tickers', async (req, res) => {
         await Stock.deleteMany({});
         const tickerArr = stockTickers.split(',');
         for (const ticker of tickerArr) {
-          await Stock.create({ id: ticker });
+          await Stock.create({ symbol: ticker });
         }
       }
       req.app.set('stockTickers', stockTickers);

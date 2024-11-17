@@ -1,9 +1,25 @@
 import { Schema, model } from 'mongoose';
 
 const stockSchema = new Schema({
-  id: {
+  symbol: {
     type: String,
     required: true
+  },
+  curPrice: {
+    type: String,
+    required: false
+  },
+  volume: {
+    type: Number,
+    required: false
+  },
+  dayPercentage: {
+    type: Number,
+    required: false
+  },
+  type: {
+    type: String,
+    required: false
   }
 });
 
