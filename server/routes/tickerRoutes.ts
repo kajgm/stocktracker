@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { socket } from '../server.js';
 import { Crypto } from '../models/Crypto.js';
 import { Stock } from '../models/Stock.js';
 import { getTrackedTickers } from '../helpers/helpers.js';
@@ -30,11 +31,13 @@ router.all('/set/tickers', async (req, res) => {
         await Crypto.deleteMany({});
         const tickerArr = cryptoTickers.split(',');
         for (const ticker of tickerArr) {
-          console.log(ticker);
           await Crypto.create({ product_id: ticker });
         }
       }
       req.app.set('cryptoTickers', cryptoTickers);
+      if (process.env.SERVER_QUERYING) {
+        socket.close();
+      }
       resString += `updated crypto tickers to be ${cryptoTickers}`;
     }
 

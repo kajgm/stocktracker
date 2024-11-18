@@ -2,14 +2,16 @@ import { Crypto } from '../models/Crypto.js';
 import { getTrackedTickers } from '../helpers/helpers.js';
 import type { WebsocketData } from '../../common/types/types.js';
 
-async function createDataSocket(endpoint: string) {
+const CRYPTO_ENDPOINT = process.env.CRYPTO_ENDPOINT || 'wss://ws-feed.exchange.coinbase.com';
+
+async function createDataSocket() {
   const { cryptoTickers } = await getTrackedTickers();
-  if (cryptoTickers === '') {
-    console.log('No tickers found, skipping socket creation');
-    return;
+  if (cryptoTickers.length == 0) {
+    return new WebSocket('');
   }
-  const socket = new WebSocket(endpoint);
-  console.log(`Socket Created with tickers: ${cryptoTickers}`);
+
+  const socket = new WebSocket(CRYPTO_ENDPOINT);
+
   socket.onopen = () => {
     socket.send(
       JSON.stringify({
@@ -33,6 +35,8 @@ async function createDataSocket(endpoint: string) {
       const update = { ...msg };
       const options = { upsert: true };
       await Crypto.findOneAndUpdate(filter, update, options);
+    } else if (msg['type'] === 'error') {
+      socket.close();
     }
   };
 
@@ -40,7 +44,7 @@ async function createDataSocket(endpoint: string) {
     console.log(e);
     console.log('Socket closing, opening new socket');
     setTimeout(() => {
-      createDataSocket(endpoint);
+      createDataSocket();
     }, 10000);
   };
 
@@ -49,6 +53,7 @@ async function createDataSocket(endpoint: string) {
     socket.close();
   };
 
+  console.log(`Socket Created with tickers: ${cryptoTickers}`);
   return socket;
 }
 

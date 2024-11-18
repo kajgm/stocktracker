@@ -2,10 +2,18 @@ import axios from 'axios';
 import { Stock } from '../models/Stock.js';
 import { getTrackedTickers } from '../helpers/helpers.js';
 
+// Limited to 250 requests per day
+// Standard trading day is open 6.5 hours
+// (6.5hr * 60min * 60sec * 1000ms) / 250 requests
+// Called every ~1.7min, rounded up to account for testing/error
+// Can change this later to ~93600
+const STOCK_TIMEOUT = 100000;
+const STOCK_ENDPOINT = process.env.STOCK_ENDPOINT || 'https://financialmodelingprep.com/api/v3/quote/';
+
 const openHours = 570; // 9 * 60 + 30
 const closeHours = 960; // 16 * 60
 
-async function queryApi(endpoint: string) {
+async function queryApi() {
   const date = new Date();
   const currentTime = (date.getUTCHours() - 4) * 60 + date.getUTCMinutes();
   const isWeekday = date.getDay() % 6 != 0;
@@ -14,7 +22,7 @@ async function queryApi(endpoint: string) {
   if (openHours <= currentTime && currentTime <= closeHours && isWeekday && stockTickers.length > 0) {
     console.log('Calling FMP api...');
     axios
-      .get(endpoint + stockTickers.toString() + '?apikey=' + process.env.FMP_KEY)
+      .get(STOCK_ENDPOINT + stockTickers.toString() + '?apikey=' + process.env.FMP_KEY)
       .then(async (res) => {
         for (const ticker of res.data) {
           const filter = { symbol: ticker.symbol };
@@ -34,9 +42,9 @@ async function queryApi(endpoint: string) {
   }
 }
 
-function pollApi(endpoint: string, timeout: number) {
-  queryApi(endpoint);
-  setTimeout(queryApi, timeout, endpoint);
+function pollApi() {
+  queryApi();
+  setTimeout(queryApi, STOCK_TIMEOUT);
 }
 
 export default pollApi;
