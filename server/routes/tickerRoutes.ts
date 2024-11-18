@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { socket } from '../server.js';
+import { cbSocket } from '../server.js';
 import { Crypto } from '../models/Crypto.js';
 import { Stock } from '../models/Stock.js';
 import { getTrackedTickers } from '../helpers/helpers.js';
@@ -36,7 +36,7 @@ router.all('/set/tickers', async (req, res) => {
       }
       req.app.set('cryptoTickers', cryptoTickers);
       if (process.env.SERVER_QUERYING) {
-        socket.close();
+        cbSocket.close();
       }
       resString += `updated crypto tickers to be ${cryptoTickers}`;
     }

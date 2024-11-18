@@ -3,6 +3,8 @@ config();
 
 import express from 'express';
 import morgan from 'morgan';
+import { createServer } from 'node:http';
+import { Server } from 'socket.io';
 import tickerRoutes from './routes/tickerRoutes.js';
 import connectDB from './config/db.js';
 import pollApi from './config/api.js';
@@ -10,16 +12,28 @@ import createDataSocket from './config/socket.js';
 
 const EXPRESS_PORT = process.env.PORT || 3000;
 
-export let socket: WebSocket;
+export let cbSocket: WebSocket;
 
 export const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:8080', 'http://localhost:5173']
+  }
+});
 
 app.use(express.json());
 app.use(morgan('dev'));
-
 app.use('/api', tickerRoutes);
 
-app.listen(EXPRESS_PORT, () => {
+io.on('connection', (socket) => {
+  console.log('a user connected');
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+});
+
+server.listen(EXPRESS_PORT, () => {
   if (process.env.DB) {
     connectDB().then(() => {
       console.log(`Stocktracker server listening on port ${EXPRESS_PORT}`);
@@ -30,6 +44,6 @@ app.listen(EXPRESS_PORT, () => {
 });
 
 if (process.env.SERVER_QUERYING && process.env.DB) {
-  socket = await createDataSocket();
+  cbSocket = await createDataSocket();
   pollApi();
 }
