@@ -7,7 +7,7 @@ export function priceDirection(currentdirection: string, currentPrice: number, p
   return currentdirection;
 }
 
-//Credit to: https://stackoverflow.com/a/9462382
+// Credit to: https://stackoverflow.com/a/9462382
 export function concatNumber(num: number, digits: number, extraPrecise?: boolean, ignoreTrailing?: boolean): string {
   const lookup = [
     { value: 1, symbol: '' },
@@ -29,6 +29,6 @@ export function concatNumber(num: number, digits: number, extraPrecise?: boolean
       ? (num / item.value).toFixed(digits).replace(regexp, '').concat(item.symbol)
       : (num / item.value).toFixed(digits).concat(item.symbol);
   } else {
-    return '0';
+    return num.toString();
   }
 }
