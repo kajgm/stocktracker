@@ -7,8 +7,8 @@ import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import tickerRoutes from './routes/tickerRoutes.js';
 import connectDB from './config/db.js';
-import pollApi from './config/api.js';
-import createDataSocket from './config/socket.js';
+import pollApi from './config/dataApi.js';
+import createDataSocket from './config/dataSocket.js';
 
 const EXPRESS_PORT = process.env.PORT || 3000;
 
