@@ -3,6 +3,7 @@ import { cbSocket } from '../server.js';
 import { Crypto } from '../models/Crypto.js';
 import { Stock } from '../models/Stock.js';
 import { getTrackedTickers } from '../helpers/helpers.js';
+import { queryApi } from 'config/dataApi.js';
 
 const router = Router();
 
@@ -51,6 +52,7 @@ router.all('/set/tickers', async (req, res) => {
       }
       req.app.set('stockTickers', stockTickers);
       resString += `updated stock tickers to be ${stockTickers}`;
+      queryApi();
     }
 
     res.send(resString);

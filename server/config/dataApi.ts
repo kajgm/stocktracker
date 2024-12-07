@@ -13,14 +13,11 @@ const STOCK_ENDPOINT = process.env.STOCK_ENDPOINT || 'https://financialmodelingp
 const openHours = 570; // 9 * 60 + 30
 const closeHours = 960; // 16 * 60
 
-async function queryApi() {
-  const date = new Date();
-  const currentTime = (date.getUTCHours() - 4) * 60 + date.getUTCMinutes();
-  const isWeekday = date.getDay() % 6 != 0;
+export async function queryApi() {
   const { stockTickers } = await getTrackedTickers();
 
-  if (openHours <= currentTime && currentTime <= closeHours && isWeekday && stockTickers.length > 0) {
-    console.log('Calling FMP api...');
+  if (stockTickers.length > 0) {
+    console.log(`Calling FMP api with tickers: ${stockTickers}`);
     axios
       .get(STOCK_ENDPOINT + stockTickers.toString() + '?apikey=' + process.env.FMP_KEY)
       .then(async (res) => {
@@ -38,13 +35,20 @@ async function queryApi() {
         console.log('Called FMP api');
       });
   } else {
-    console.log('Skipped api call, outside trading hours or no stocks provided');
+    console.log('Skipped api call, no tickers provided');
   }
 }
 
 function pollApi() {
-  queryApi();
-  setTimeout(queryApi, STOCK_TIMEOUT);
+  const date = new Date();
+  const currentTime = (date.getUTCHours() - 4) * 60 + date.getUTCMinutes();
+  const isWeekday = date.getDay() % 6 != 0;
+  if (openHours <= currentTime && currentTime <= closeHours && isWeekday) {
+    queryApi();
+  } else {
+    console.log('Skipped api call, outside trading hours');
+  }
+  setTimeout(pollApi, STOCK_TIMEOUT);
 }
 
 export default pollApi;
