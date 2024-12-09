@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { io } from 'socket.io-client';
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
@@ -8,8 +7,6 @@ import './assets/main.css';
 
 const app = createApp(App);
 const pinia = createPinia();
-const socket = io('http://localhost:3000');
-socket.emit('test', 'test');
 
 app.use(pinia);
 app.use(router);

@@ -39,7 +39,7 @@ export async function queryApi() {
   }
 }
 
-function pollApi() {
+export function pollApi() {
   const date = new Date();
   const currentTime = (date.getUTCHours() - 4) * 60 + date.getUTCMinutes();
   const isWeekday = date.getDay() % 6 != 0;
@@ -50,5 +50,3 @@ function pollApi() {
   }
   setTimeout(pollApi, STOCK_TIMEOUT);
 }
-
-export default pollApi;

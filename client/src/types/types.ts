@@ -11,7 +11,7 @@ export interface TickerData {
   type: TickerType;
 }
 
-export interface ApiRequestData {
+export interface stockSocketData {
   symbol: string;
   name: string;
   price: number;
@@ -36,7 +36,7 @@ export interface ApiRequestData {
   timestamp: number;
 }
 
-export interface WebsocketData {
+export interface cryptoSocketData {
   best_ask: string;
   best_ask_size: string;
   best_bid: string;

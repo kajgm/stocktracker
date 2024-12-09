@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
-import { coinbaseConnect } from './crypto/crypto';
 import { fmpConnect } from './stock/stock';
 import { useTickerStore } from './store/ticker';
 import { pollUpdatedTickers } from './server/server';
@@ -18,10 +17,6 @@ const stockTickers = computed<string[]>(() => {
 onMounted(() => {
   // Local configuration api server
   pollUpdatedTickers();
-
-  // Crypto Coinbase websocket
-  const cryptoSocket = coinbaseConnect();
-  tickerStore.setSocket(cryptoSocket);
 
   // Financial Modeling Prep api polling
   if (process.env.FMP_KEY) {
