@@ -19,3 +19,11 @@ export async function getTrackedTickers() {
 
   return { stockTickers: stock, cryptoTickers: crypto };
 }
+
+export async function getTrackedStockData() {
+  return await Stock.find();
+}
+
+export async function getTrackedCryptoData() {
+  return await Crypto.find();
+}

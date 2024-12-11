@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
-import { fmpConnect } from './stock/stock';
+import { computed } from 'vue';
 import { useTickerStore } from './store/ticker';
-import { pollUpdatedTickers } from './server/server';
 
 const tickerStore = useTickerStore();
 
@@ -12,16 +10,6 @@ const cryptoTickers = computed<string[]>(() => {
 
 const stockTickers = computed<string[]>(() => {
   return tickerStore.stockKeys;
-});
-
-onMounted(() => {
-  // Local configuration api server
-  pollUpdatedTickers();
-
-  // Financial Modeling Prep api polling
-  if (process.env.FMP_KEY) {
-    fmpConnect();
-  }
 });
 </script>
 

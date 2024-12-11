@@ -51,8 +51,9 @@ export const useTickerStore = defineStore('ticker', {
   },
   actions: {
     bindEvents() {
-      socket.on('cryptoTicker', (data: string) => {
-        const msg = JSON.parse(data) as cryptoSocketData;
+      socket.on('cryptoUpdate', (msg: cryptoSocketData) => {
+        console.log('crypto Update');
+        console.log(msg);
         const prevRes = this.cryptoValue(msg.product_id);
         const curPrice = parseFloat(msg.price);
         const dayPrice = parseFloat(msg.open_24h);
@@ -67,10 +68,10 @@ export const useTickerStore = defineStore('ticker', {
           type: 'CRYPTO'
         } as TickerData;
         this.updateCryptoData(msg.product_id, tickerValue);
+        this.setExtStatus('CONNECTED', 'CRYPTO');
       });
 
-      socket.on('stockTicker', (data: string) => {
-        const msg = JSON.parse(data) as stockSocketData;
+      socket.on('stockUpdate', (msg: stockSocketData) => {
         const prevRes = this.stockValue(msg.symbol);
         const stock = {
           id: msg.symbol,
@@ -78,14 +79,21 @@ export const useTickerStore = defineStore('ticker', {
           volume: msg.volume,
           prevPrice: prevRes.curPrice,
           dayPercentage: msg.changesPercentage,
-          dirFilter:
-            prevRes.curPrice == -1
-              ? priceDirection(prevRes.dirFilter, msg.changesPercentage, 0)
-              : priceDirection(prevRes.dirFilter, msg.price, prevRes.prevPrice),
+          dirFilter: priceDirection(prevRes.dirFilter, msg.price, prevRes.prevPrice),
           status: 'CONNECTED',
           type: 'STOCK'
         } as TickerData;
         this.updateStockData(msg.symbol, stock);
+        this.setExtStatus('CONNECTED', 'STOCK');
+      });
+
+      socket.on('updateTickers', (msg: { crypto: string[]; stock: string[] }) => {
+        for (const ticker of msg.crypto) {
+          this.addNewTicker(ticker, 'CRYPTO');
+        }
+        for (const ticker of msg.stock) {
+          this.addNewTicker(ticker, 'STOCK');
+        }
       });
     },
     setExtStatus(status: StatusType, type: TickerType) {
