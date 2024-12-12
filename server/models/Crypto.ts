@@ -71,4 +71,4 @@ const cryptoSchema = new Schema({
   }
 });
 
-export const Crypto = model('Cryptos', cryptoSchema);
+export const CryptoDB = model('Cryptos', cryptoSchema);

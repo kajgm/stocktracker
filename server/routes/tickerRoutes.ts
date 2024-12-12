@@ -1,20 +1,35 @@
 import { Router } from 'express';
 import { cbSocket } from '../server.js';
-import { Crypto } from '../models/Crypto.js';
-import { Stock } from '../models/Stock.js';
-import { getTrackedTickers } from '../helpers/helpers.js';
-import { queryApi } from 'config/dataApi.js';
+import { CryptoDB } from '../models/Crypto.js';
+import { StockDB } from '../models/Stock.js';
+import { ConfigDB } from '../models/Config.js';
+import { queryApi } from '../config/dataApi.js';
+
+const USER = process.env.USER || 'localhost';
 
 const router = Router();
 
-router.all('/get/tickers', async (_req, res) => {
+router.all('/get/tickers', async (req, res) => {
   try {
-    const { stockTickers, cryptoTickers } = await getTrackedTickers();
+    let stocks: string[];
+    let cryptos: string[];
+
+    const expStock = req.app.get('stockTickers');
+    const expCrypto = req.app.get('cryptoTickers');
+
+    if (!expStock && !expCrypto && process.env.DB) {
+      const userConfig = (await ConfigDB.findOne({ user: USER }).lean()) || { stockTickers: [], cryptoTickers: [] };
+      stocks = userConfig.stockTickers;
+      cryptos = userConfig.cryptoTickers;
+    } else {
+      stocks = expStock ? expStock.split(',') : undefined;
+      cryptos = expCrypto ? expCrypto.split(',') : undefined;
+    }
 
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.json({ stockTickers: stockTickers.toString(), cryptoTickers: cryptoTickers.toString() });
+    res.json({ stockTickers: stocks.toString(), cryptoTickers: cryptos.toString() });
   } catch (e) {
     console.log(e);
   }
@@ -26,14 +41,12 @@ router.all('/set/tickers', async (req, res) => {
     const cryptoTickers = req.query.crypto as string;
 
     let resString = '';
+    let cryptoArr: string[] = [];
+    let stockArr: string[] = [];
 
     if (cryptoTickers != undefined) {
       if (process.env.DB) {
-        await Crypto.deleteMany({});
-        const tickerArr = cryptoTickers.split(',');
-        for (const ticker of tickerArr) {
-          await Crypto.create({ product_id: ticker });
-        }
+        cryptoArr = cryptoTickers.split(',');
       }
       req.app.set('cryptoTickers', cryptoTickers);
       if (process.env.SERVER_QUERYING) {
@@ -44,21 +57,30 @@ router.all('/set/tickers', async (req, res) => {
 
     if (stockTickers != undefined) {
       if (process.env.DB) {
-        await Stock.deleteMany({});
-        const tickerArr = stockTickers.split(',');
-        for (const ticker of tickerArr) {
-          await Stock.create({ symbol: ticker });
-        }
+        stockArr = stockTickers.split(',');
       }
       req.app.set('stockTickers', stockTickers);
       resString += `updated stock tickers to be ${stockTickers}`;
       queryApi();
     }
 
+    if (process.env.DB) {
+      const filter = { user: USER };
+      const update = { stocks: stockArr, cryptos: cryptoArr };
+      const options = { upsert: true }; // upsert if entry not found
+      await ConfigDB.findOneAndUpdate(filter, update, options);
+    }
+
     res.send(resString);
   } catch (e) {
     console.log(e);
   }
+});
+
+router.all('/cleardb', async (_req, _res) => {
+  await CryptoDB.deleteMany({});
+  await StockDB.deleteMany({});
+  await ConfigDB.deleteMany({});
 });
 
 export default router;

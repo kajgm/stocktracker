@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { Stock } from '../models/Stock.js';
-import { getTrackedTickers } from '../helpers/helpers.js';
+import { StockDB } from '../models/Stock.js';
+import { ConfigDB } from '../models/Config.js';
+import { USER } from '../server.js';
 
 // Limited to 250 requests per day
 // Standard trading day is open 6.5 hours
@@ -14,7 +15,8 @@ const openHours = 570; // 9 * 60 + 30
 const closeHours = 960; // 16 * 60
 
 export async function queryApi() {
-  const { stockTickers } = await getTrackedTickers();
+  const userConfig = (await ConfigDB.findOne({ user: USER }).lean()) || { cryptoTickers: [], stockTickers: [] };
+  const stockTickers = userConfig.stockTickers;
 
   if (stockTickers.length > 0) {
     console.log(`Calling FMP api with tickers: ${stockTickers}`);
@@ -25,7 +27,7 @@ export async function queryApi() {
           const filter = { symbol: ticker.symbol };
           const update = { ...ticker };
           const options = { upsert: true };
-          await Stock.findOneAndUpdate(filter, update, options);
+          await StockDB.findOneAndUpdate(filter, update, options);
         }
       })
       .catch((error) => {

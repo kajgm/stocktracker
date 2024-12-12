@@ -1,5 +1,8 @@
-import { getTrackedCryptoData, getTrackedStockData, getTrackedTickers } from 'helpers/helpers.js';
 import { Server, Socket } from 'socket.io';
+import { StockDB } from '../models/Stock.js';
+import { CryptoDB } from '../models/Crypto.js';
+import { ConfigDB } from '../models/Config.js';
+import { USER } from '../server.js';
 
 export default async function registerHandlers(_io: Server, socket: Socket) {
   console.log('a user connected');
@@ -7,11 +10,13 @@ export default async function registerHandlers(_io: Server, socket: Socket) {
     console.log('user disconnected');
   });
 
-  const { stockTickers, cryptoTickers } = await getTrackedTickers();
+  const userConfig = (await ConfigDB.findOne({ user: USER }).lean()) || { cryptoTickers: [], stockTickers: [] };
+  const stockTickers = userConfig.stockTickers;
+  const cryptoTickers = userConfig.stockTickers;
 
   const emitMsg = {
-    crypto: cryptoTickers,
-    stock: stockTickers
+    stock: stockTickers,
+    crypto: cryptoTickers
   };
 
   socket.emit('updateTickers', emitMsg);
@@ -20,8 +25,8 @@ export default async function registerHandlers(_io: Server, socket: Socket) {
 }
 
 async function pollEmit(socket: Socket) {
-  const stockData = await getTrackedStockData();
-  const cryptoData = await getTrackedCryptoData();
+  const stockData = await StockDB.find();
+  const cryptoData = await CryptoDB.find();
 
   for (const stock of stockData) {
     socket.emit('stockUpdate', stock);

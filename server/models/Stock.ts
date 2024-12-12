@@ -95,4 +95,4 @@ const stockSchema = new Schema({
   }
 });
 
-export const Stock = model('Stocks', stockSchema);
+export const StockDB = model('Stocks', stockSchema);

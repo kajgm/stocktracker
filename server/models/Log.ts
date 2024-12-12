@@ -11,4 +11,4 @@ const logSchema = new Schema({
   }
 });
 
-export const Log = model('Logs', logSchema);
+export const LogDB = model('Logs', logSchema);

@@ -11,11 +11,12 @@ import tickerRoutes from './routes/tickerRoutes.js';
 import createDataSocket from './config/dataSocket.js';
 import registerHandlers from './routes/clientHandlers.js';
 
+export const USER = process.env.USER || 'localhost';
 const EXPRESS_PORT = process.env.PORT || 3000;
 
 export let cbSocket: WebSocket;
 
-export const app = express();
+const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
