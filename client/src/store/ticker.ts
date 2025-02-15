@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
-import type { TickerData, StatusType, TickerType } from '@/types/types.js';
-import { defaultTicker } from '@/types/types.js';
+import type { TickerData, StatusType, TickerType, SizeInfo } from '@/types/types.js';
+import { defaultTicker, SizeMap } from '@/types/types.js';
 
 interface State {
   cryptoDataMap: Map<string, TickerData>;
@@ -50,6 +50,18 @@ export const useTickerStore = defineStore('ticker', {
     },
     cryptoStatus(): StatusType {
       return this.status.crypto;
+    },
+    tickerSizeInfo(): SizeInfo {
+      const totalNumTickers =
+        Array.from(this.stockDataMap.keys()).length + Array.from(this.cryptoDataMap.keys()).length;
+      console.log(totalNumTickers);
+      if (totalNumTickers == 1) {
+        return SizeMap.LARGE;
+      } else if (totalNumTickers <= 4) {
+        return SizeMap.MEDIUM;
+      } else {
+        return SizeMap.SMALL;
+      }
     }
   },
   actions: {
