@@ -56,10 +56,12 @@ export const useTickerStore = defineStore('ticker', {
         Array.from(this.stockDataMap.keys()).length + Array.from(this.cryptoDataMap.keys()).length;
       if (totalNumTickers == 1) {
         return SizeMap.LARGE;
-      } else if (totalNumTickers <= 4) {
+      } else if (totalNumTickers > 1 && totalNumTickers <= 4) {
         return SizeMap.MEDIUM;
-      } else {
+      } else if (totalNumTickers > 4 && totalNumTickers <= 6) {
         return SizeMap.SMALL;
+      } else {
+        return SizeMap.XSMALL;
       }
     }
   },
