@@ -1,16 +1,22 @@
 import type { WebsocketData } from '../../common/types/types.js';
 import { CryptoDB } from '../models/Crypto.js';
 import { ConfigDB } from '../models/Config.js';
-import { USER } from '../server.js';
+import { CRYPTO_TIMEOUT, DB_USER } from '../server.js';
 
-const CRYPTO_TIMEOUT = 10000;
 const CRYPTO_ENDPOINT = process.env.CRYPTO_ENDPOINT || 'wss://ws-feed.exchange.coinbase.com';
 
 async function createDataSocket() {
-  const userConfig = (await ConfigDB.findOne({ user: USER }).lean()) || { cryptoTickers: [], stockTickers: [] };
-  const cryptoTickers = userConfig.stockTickers;
+  const userConfig = (await ConfigDB.findOne({ user: DB_USER }).lean()) || { cryptoTickers: [], stockTickers: [] };
+  const cryptoTickers = userConfig.cryptoTickers;
   if (cryptoTickers.length == 0) {
-    return new WebSocket('');
+    return {
+      close: () => {
+        console.log('Opening new socket');
+        setTimeout(() => {
+          createDataSocket();
+        }, CRYPTO_TIMEOUT);
+      }
+    };
   }
 
   const socket = new WebSocket(CRYPTO_ENDPOINT);

@@ -11,10 +11,12 @@ import tickerRoutes from './routes/tickerRoutes.js';
 import createDataSocket from './config/dataSocket.js';
 import registerHandlers from './routes/clientHandlers.js';
 
-export const USER = process.env.USER || 'localhost';
+export const STOCK_TIMEOUT = 100000;
+export const CRYPTO_TIMEOUT = 10000;
+export const DB_USER = process.env.DB_USER || 'localhost';
 const EXPRESS_PORT = process.env.PORT || 3000;
 
-export let cbSocket: WebSocket;
+export let cbSocket: WebSocket | { close: () => void };
 
 const app = express();
 const server = createServer(app);
@@ -40,8 +42,8 @@ server.listen(EXPRESS_PORT, () => {
   }
 });
 
-if (process.env.SERVER_QUERYING && process.env.DB) {
+if (process.env.DB) {
   cbSocket = await createDataSocket();
   queryApi();
-  setTimeout(pollApi, 100000);
+  setTimeout(pollApi, STOCK_TIMEOUT);
 }

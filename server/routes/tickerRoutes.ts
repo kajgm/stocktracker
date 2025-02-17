@@ -4,8 +4,7 @@ import { CryptoDB } from '../models/Crypto.js';
 import { StockDB } from '../models/Stock.js';
 import { ConfigDB } from '../models/Config.js';
 import { queryApi } from '../config/dataApi.js';
-
-const USER = process.env.USER || 'localhost';
+import { DB_USER } from '../server.js';
 
 const router = Router();
 
@@ -18,7 +17,7 @@ router.all('/get/tickers', async (req, res) => {
     const expCrypto = req.app.get('cryptoTickers');
 
     if (!expStock && !expCrypto && process.env.DB) {
-      const userConfig = (await ConfigDB.findOne({ user: USER }).lean()) || { stockTickers: [], cryptoTickers: [] };
+      const userConfig = (await ConfigDB.findOne({ user: DB_USER }).lean()) || { stockTickers: [], cryptoTickers: [] };
       stocks = userConfig.stockTickers;
       cryptos = userConfig.cryptoTickers;
     } else {
@@ -49,9 +48,6 @@ router.all('/set/tickers', async (req, res) => {
         cryptoArr = cryptoTickers.split(',');
       }
       req.app.set('cryptoTickers', cryptoTickers);
-      if (process.env.SERVER_QUERYING) {
-        cbSocket.close();
-      }
       resString += `updated crypto tickers to be ${cryptoTickers}`;
     }
 
@@ -61,14 +57,21 @@ router.all('/set/tickers', async (req, res) => {
       }
       req.app.set('stockTickers', stockTickers);
       resString += `updated stock tickers to be ${stockTickers}`;
-      queryApi();
     }
 
     if (process.env.DB) {
-      const filter = { user: USER };
-      const update = { stocks: stockArr, cryptos: cryptoArr };
+      const filter = { user: DB_USER };
+      const update = { stockTickers: stockArr, cryptoTickers: cryptoArr };
       const options = { upsert: true }; // upsert if entry not found
       await ConfigDB.findOneAndUpdate(filter, update, options);
+    }
+
+    if (cryptoTickers != undefined) {
+      cbSocket.close();
+    }
+
+    if (stockTickers != undefined) {
+      queryApi();
     }
 
     res.send(resString);
@@ -78,9 +81,11 @@ router.all('/set/tickers', async (req, res) => {
 });
 
 router.all('/cleardb', async (_req, _res) => {
-  await CryptoDB.deleteMany({});
-  await StockDB.deleteMany({});
-  await ConfigDB.deleteMany({});
+  if (process.env.DB) {
+    await CryptoDB.deleteMany({});
+    await StockDB.deleteMany({});
+    await ConfigDB.deleteMany({});
+  }
 });
 
 export default router;
