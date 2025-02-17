@@ -54,7 +54,6 @@ export const useTickerStore = defineStore('ticker', {
     tickerSizeInfo(): SizeInfo {
       const totalNumTickers =
         Array.from(this.stockDataMap.keys()).length + Array.from(this.cryptoDataMap.keys()).length;
-      console.log(totalNumTickers);
       if (totalNumTickers == 1) {
         return SizeMap.LARGE;
       } else if (totalNumTickers <= 4) {

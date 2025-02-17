@@ -77,17 +77,17 @@ export type TypeSizeMap = {
 
 export const SizeMap: TypeSizeMap = {
   SMALL: {
-    boxSize: { X: '1/4', Y: '1/3' },
+    boxSize: { X: 'w-1/4 max-w-1/4', Y: 'h-1/3 max-h-1/3' },
     name: 'text-l',
     price: 'text-l max-w-40',
     status: 'text-l',
     padding: 'pt-1',
     iconSize: 'h-3',
     vol: 'hidden',
-    percent: 'text-sm w-full text-left'
+    percent: 'text-l w-full text-center'
   },
   MEDIUM: {
-    boxSize: { X: '1/2', Y: '1/2' },
+    boxSize: { X: 'w-1/2 max-w-1/2', Y: 'h-1/2 max-h-1/2' },
     name: 'text-4xl',
     price: 'text-4xl max-w-40',
     status: 'text-4xl',
