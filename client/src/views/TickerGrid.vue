@@ -24,13 +24,7 @@ const sInfo = computed<SizeInfo>(() => {
     <div v-for="id in cryptoIds" :key="id" :class="sInfo.boxSize.X + ' ' + sInfo.boxSize.Y">
       <TickerBox :ticker-id="id" ticker-type="CRYPTO" :r-link="'CRYPTO/' + id"></TickerBox>
     </div>
-    <div
-      v-for="id in stockIds"
-      :key="id"
-      :class="
-        'w-' + sInfo.boxSize.X + ' h-' + sInfo.boxSize.Y + ' max-w-' + sInfo.boxSize.X + ' max-h-' + sInfo.boxSize.Y
-      "
-    >
+    <div v-for="id in stockIds" :key="id" :class="sInfo.boxSize.X + ' ' + sInfo.boxSize.Y">
       <TickerBox :ticker-id="id" ticker-type="STOCK" :r-link="'STOCK/' + id"></TickerBox>
     </div>
   </div>
