@@ -58,7 +58,7 @@ export interface WebsocketData {
 
 export type StatusType = 'CONNECTED' | 'CONNECTING' | 'UPDATED' | 'ERROR';
 
-export type SizeType = 'SMALL' | 'MEDIUM' | 'LARGE';
+export type SizeType = 'XSMALL' | 'SMALL' | 'MEDIUM' | 'LARGE';
 
 export interface SizeInfo {
   boxSize: { X: string; Y: string };
@@ -76,7 +76,7 @@ export type TypeSizeMap = {
 };
 
 export const SizeMap: TypeSizeMap = {
-  SMALL: {
+  XSMALL: {
     boxSize: { X: 'w-1/4 max-w-1/4', Y: 'h-1/3 max-h-1/3' },
     name: 'text-l',
     price: 'text-l max-w-40',
@@ -84,7 +84,17 @@ export const SizeMap: TypeSizeMap = {
     padding: 'pt-1',
     iconSize: 'h-3',
     vol: 'hidden',
-    percent: 'text-l w-full text-center'
+    percent: 'text-l w-full text-left'
+  },
+  SMALL: {
+    boxSize: { X: 'w-1/3 max-w-1/3', Y: 'h-1/2 max-h-1/2' },
+    name: 'text-2xl',
+    price: 'text-2xl max-w-40',
+    status: 'text-2xl',
+    padding: 'pt-2',
+    iconSize: 'h-4',
+    vol: 'hidden',
+    percent: 'text-2xl w-full text-left'
   },
   MEDIUM: {
     boxSize: { X: 'w-1/2 max-w-1/2', Y: 'h-1/2 max-h-1/2' },
