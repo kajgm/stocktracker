@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
-import type { TickerData, StatusType, TickerType, SizeInfo } from '@/types/types.js';
+import socket from '@/socket/socket.js';
+import { priceDirection } from '@/helpers/helpers.js';
 import { defaultTicker, SizeMap } from '@/types/types.js';
+import type { TickerData, StatusType, TickerType, cryptoSocketData, stockSocketData, SizeInfo } from '@/types/types.js';
 
 interface State {
   cryptoDataMap: Map<string, TickerData>;
@@ -10,15 +12,13 @@ interface State {
     stock: StatusType;
     crypto: StatusType;
   };
-  cSocket: WebSocket | undefined;
 }
 
 export const useTickerStore = defineStore('ticker', {
   state: (): State => ({
     cryptoDataMap: new Map<string, TickerData>(),
     stockDataMap: new Map<string, TickerData>(),
-    status: { overall: 'CONNECTING', stock: 'CONNECTING', crypto: 'CONNECTING' },
-    cSocket: undefined
+    status: { overall: 'CONNECTING', stock: 'CONNECTING', crypto: 'CONNECTING' }
   }),
   getters: {
     cryptoValue(): (key: string) => TickerData {
@@ -38,9 +38,6 @@ export const useTickerStore = defineStore('ticker', {
     },
     stockKeys(): string[] {
       return Array.from(this.stockDataMap.keys());
-    },
-    cryptoSocket(): WebSocket {
-      return this.cSocket;
     },
     overallStatus(): StatusType {
       return this.status.overall;
@@ -66,6 +63,52 @@ export const useTickerStore = defineStore('ticker', {
     }
   },
   actions: {
+    bindEvents() {
+      socket.on('cryptoUpdate', (msg: cryptoSocketData) => {
+        console.log('crypto Update');
+        console.log(msg);
+        const prevRes = this.cryptoValue(msg.product_id);
+        const curPrice = parseFloat(msg.price);
+        const dayPrice = parseFloat(msg.open_24h);
+        const tickerValue = {
+          id: msg.product_id,
+          curPrice: curPrice,
+          volume: parseFloat(msg.volume_24h),
+          dayPercentage: ((curPrice - dayPrice) / dayPrice) * 100,
+          prevPrice: prevRes.curPrice,
+          dirFilter: priceDirection(prevRes.dirFilter, curPrice, prevRes.prevPrice),
+          status: 'CONNECTED',
+          type: 'CRYPTO'
+        } as TickerData;
+        this.updateCryptoData(msg.product_id, tickerValue);
+        this.setExtStatus('CONNECTED', 'CRYPTO');
+      });
+
+      socket.on('stockUpdate', (msg: stockSocketData) => {
+        const prevRes = this.stockValue(msg.symbol);
+        const stock = {
+          id: msg.symbol,
+          curPrice: msg.price,
+          volume: msg.volume,
+          prevPrice: prevRes.curPrice,
+          dayPercentage: msg.changesPercentage,
+          dirFilter: priceDirection(prevRes.dirFilter, msg.price, prevRes.prevPrice),
+          status: 'CONNECTED',
+          type: 'STOCK'
+        } as TickerData;
+        this.updateStockData(msg.symbol, stock);
+        this.setExtStatus('CONNECTED', 'STOCK');
+      });
+
+      socket.on('updateTickers', (msg: { crypto: string[]; stock: string[] }) => {
+        for (const ticker of msg.crypto) {
+          this.addNewTicker(ticker, 'CRYPTO');
+        }
+        for (const ticker of msg.stock) {
+          this.addNewTicker(ticker, 'STOCK');
+        }
+      });
+    },
     setExtStatus(status: StatusType, type: TickerType) {
       if (type == 'CRYPTO') this.status.crypto = status;
       if (type == 'STOCK') this.status.stock = status;
@@ -74,9 +117,6 @@ export const useTickerStore = defineStore('ticker', {
       } else {
         this.status.overall = 'CONNECTING';
       }
-    },
-    setSocket(socket: WebSocket | undefined) {
-      this.cSocket = socket;
     },
     updateCryptoData(key: string, tData: TickerData) {
       this.cryptoDataMap.set(key, tData);
