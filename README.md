@@ -1,6 +1,6 @@
 # Stock Tracker &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kajgm/stocktracker/blob/master/LICENSE) [![Node.js CI](https://github.com/kajgm/stocktracker/actions/workflows/node.js.yml/badge.svg)](https://github.com/kajgm/stocktracker/actions/workflows/node.js.yml) ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
 
-A minimal tracker for Stocks and Cryptocurrencies. Intended for use on external Raspberry Pi based displays (3.5inch) or within a browser.
+A minimal full-stack tracker for Stocks and Cryptocurrencies. Intended for use on external Raspberry Pi based displays (3.5inch) or within a browser. Created to be deployed at scale.
 
 ![Example](docs/example.png)
 
@@ -10,6 +10,8 @@ A minimal tracker for Stocks and Cryptocurrencies. Intended for use on external 
 - [Vue](https://vuejs.org/)
 - [Vite](https://vitejs.dev/)
 - [Tailwind](https://tailwindcss.com/)
+- [Express](https://expressjs.com/)
+- [MongoDB](https://www.mongodb.com/)
 
 ## Prerequisites
 
@@ -30,12 +32,6 @@ cd client
 npm install
 cd ../server
 npm install
-```
-
-### Create a `.env` file within `/client` (using .env.template) and add parameters
-
-```
-FMP_KEY="<your_api_key>"
 ```
 
 ### Compile and Hot-Reload for Development
@@ -74,7 +70,7 @@ npm run lint
 
 ## Docker Deployment
 
-To deploy within Docker, please follow these steps:
+To deploy with Docker, please follow these steps:
 
 1. Install [Docker Engine](https://docs.docker.com/engine/install/)
 
@@ -94,14 +90,14 @@ docker build -t kajgm/stocktracker-client .
 docker build -t kajgm/stocktracker-server .
 ```
 
-5. Create a network for these containers
+5. Create a bridge network
 
 ```sh
 docker network create -d bridge backend-net
 ```
 
 6. Run the client, server, and database containers
-   > Note: If running on a raspberry pi, you will need to download an alternative mongodb image. Please see steps under [Deployment on Raspberry Pi](#deployment-on-raspberry-pi)
+   > Note: If running on a Raspberry Pi, you will need to download an alternative mongodb image. Please see steps under [Deployment on Raspberry Pi](#deployment-on-raspberry-pi)
 
 ```sh
 docker run -d -p 8080:80 --name stocktracker-client --network backend-net --restart always kajgm/stocktracker-client
@@ -113,9 +109,9 @@ docker run -d --name mongodb-server --network backend-net -v stocktracker:/data/
 
 Ensure the Docker deployment steps from above are followed on the target Raspberry Pi
 
-1. Mongodb currently does not support the ARM architecure used on raspberry pis. Please use the alternative image provided by themattman [mongodb-raspberrypi-docker](https://github.com/themattman/mongodb-raspberrypi-docker?tab=readme-ov-file#how-to-install)
+1. Mongodb currently does not support the ARM architecure used on Raspberry Pis. Please use the alternative image provided by themattman [mongodb-raspberrypi-docker](https://github.com/themattman/mongodb-raspberrypi-docker?tab=readme-ov-file#how-to-install)
 
-2. If running these commands over ssh, export the display
+2. If running these commands over ssh set the $DISPLAY environment variable
 
 ```sh
 export DISPLAY=:0
@@ -127,7 +123,7 @@ export DISPLAY=:0
 chromium-browser --kiosk --app=http://localhost:8080/ --start-fullscreen --incognito
 ```
 
-> Alternatively, you may have to append `nohup` and `&` to run the command in the background (if executing via ssh):
+> Alternatively, you may need to append `nohup` and `&` to run the command in the background (if executing via ssh):
 
 ```sh
 nohup chromium-browser --kiosk --app=http://localhost:8080/ --start-fullscreen --incognito &
