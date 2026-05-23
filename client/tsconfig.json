@@ -27,7 +27,6 @@
     "sourceMap": false,
     "strict": true,
     "verbatimModuleSyntax": false,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },

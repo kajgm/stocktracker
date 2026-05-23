@@ -1,3 +1,6 @@
+import { config } from 'dotenv';
+config();
+
 import type { WebsocketData } from '../../common/types/types.js';
 import { CryptoDB } from '../models/Crypto.js';
 import { ConfigDB } from '../models/Config.js';

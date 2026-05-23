@@ -33,7 +33,7 @@ app.use('/api', tickerRoutes);
 io.on('connection', (socket: Socket) => registerHandlers(io, socket));
 
 server.listen(EXPRESS_PORT, () => {
-  if (process.env.DB) {
+  if (process.env.DB && process.env.DB == "true") {
     connectDB().then(() => {
       console.log(`Stocktracker server listening on port ${EXPRESS_PORT}`);
     });
@@ -42,7 +42,7 @@ server.listen(EXPRESS_PORT, () => {
   }
 });
 
-if (process.env.DB) {
+if (process.env.DB && process.env.DB == "true") {
   cbSocket = await createDataSocket();
   queryApi();
   setTimeout(pollApi, STOCK_TIMEOUT);

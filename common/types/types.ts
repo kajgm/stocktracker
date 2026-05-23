@@ -15,8 +15,9 @@ export interface ApiRequestData {
   symbol: string;
   name: string;
   price: number;
-  changesPercentage: number;
+  changePercentage: number;
   change: number;
+  volume: number;
   dayLow: number;
   dayHigh: number;
   yearHigh: number;
@@ -25,14 +26,8 @@ export interface ApiRequestData {
   priceAvg50: number;
   priceAvg200: number;
   exchange: string;
-  volume: number;
-  avgVolume: number;
   open: number;
   previousClose: number;
-  eps: number;
-  pe: number;
-  earningsAnnouncement: string;
-  sharesOutstanding: number;
   timestamp: number;
 }
 

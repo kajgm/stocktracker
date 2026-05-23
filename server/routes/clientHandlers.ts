@@ -10,7 +10,7 @@ export default async function registerHandlers(_io: Server, socket: Socket) {
     console.log('user disconnected');
   });
 
-  if (process.env.DB) {
+  if (process.env.DB && process.env.DB == "true") {
     const userConfig = (await ConfigDB.findOne({ user: DB_USER }).lean()) || { cryptoTickers: [], stockTickers: [] };
     const stockTickers = userConfig.stockTickers;
     const cryptoTickers = userConfig.cryptoTickers;
@@ -27,7 +27,7 @@ export default async function registerHandlers(_io: Server, socket: Socket) {
 }
 
 async function pollEmit(socket: Socket) {
-  if (process.env.DB) {
+  if (process.env.DB && process.env.DB == "true") {
     const stockData = await StockDB.find();
     const cryptoData = await CryptoDB.find();
 

@@ -16,7 +16,7 @@ router.all('/get/tickers', async (req, res) => {
     const expStock = req.app.get('stockTickers');
     const expCrypto = req.app.get('cryptoTickers');
 
-    if (!expStock && !expCrypto && process.env.DB) {
+    if (!expStock && !expCrypto && process.env.DB && process.env.DB == 'true') {
       const userConfig = (await ConfigDB.findOne({ user: DB_USER }).lean()) || { stockTickers: [], cryptoTickers: [] };
       stocks = userConfig.stockTickers;
       cryptos = userConfig.cryptoTickers;
@@ -44,7 +44,7 @@ router.all('/set/tickers', async (req, res) => {
     let stockArr: string[] = [];
 
     if (cryptoTickers != undefined) {
-      if (process.env.DB) {
+      if (process.env.DB && process.env.DB == 'true') {
         cryptoArr = cryptoTickers.split(',');
       }
       req.app.set('cryptoTickers', cryptoTickers);
@@ -52,26 +52,28 @@ router.all('/set/tickers', async (req, res) => {
     }
 
     if (stockTickers != undefined) {
-      if (process.env.DB) {
+      if (process.env.DB && process.env.DB == 'true') {
         stockArr = stockTickers.split(',');
       }
       req.app.set('stockTickers', stockTickers);
       resString += `updated stock tickers to be ${stockTickers}`;
     }
 
-    if (process.env.DB) {
+    if (process.env.DB && process.env.DB == 'true') {
       const filter = { user: DB_USER };
       const update = { stockTickers: stockArr, cryptoTickers: cryptoArr };
       const options = { upsert: true }; // upsert if entry not found
       await ConfigDB.findOneAndUpdate(filter, update, options);
     }
 
-    if (cryptoTickers != undefined) {
-      cbSocket.close();
-    }
+    if (process.env.DB && process.env.DB == 'true') {
+      if (cryptoTickers != undefined) {
+        cbSocket.close();
+      }
 
-    if (stockTickers != undefined) {
-      queryApi();
+      if (stockTickers != undefined) {
+        queryApi();
+      }
     }
 
     res.send(resString);
@@ -81,7 +83,7 @@ router.all('/set/tickers', async (req, res) => {
 });
 
 router.all('/cleardb', async (_req, _res) => {
-  if (process.env.DB) {
+  if (process.env.DB && process.env.DB == 'true') {
     await CryptoDB.deleteMany({});
     await StockDB.deleteMany({});
     await ConfigDB.deleteMany({});

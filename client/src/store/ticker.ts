@@ -86,12 +86,13 @@ export const useTickerStore = defineStore('ticker', {
 
       socket.on('stockUpdate', (msg: stockSocketData) => {
         const prevRes = this.stockValue(msg.symbol);
+        const changePercent = ((msg.price - msg.open) / msg.open) * 100;
         const stock = {
           id: msg.symbol,
           curPrice: msg.price,
           volume: msg.volume,
           prevPrice: prevRes.curPrice,
-          dayPercentage: msg.changesPercentage,
+          dayPercentage: changePercent,
           dirFilter: priceDirection(prevRes.dirFilter, msg.price, prevRes.prevPrice),
           status: 'CONNECTED',
           type: 'STOCK'

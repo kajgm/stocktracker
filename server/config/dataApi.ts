@@ -1,3 +1,6 @@
+import { config } from 'dotenv';
+config();
+
 import axios from 'axios';
 import { StockDB } from '../models/Stock.js';
 import { ConfigDB } from '../models/Config.js';
@@ -9,7 +12,7 @@ import { ConfigDB } from '../models/Config.js';
 // Can change this later to ~93600
 import { STOCK_TIMEOUT, DB_USER } from '../server.js';
 
-const STOCK_ENDPOINT = process.env.STOCK_ENDPOINT || 'https://financialmodelingprep.com/api/v3/quote/';
+const STOCK_ENDPOINT = process.env.STOCK_ENDPOINT || 'https://financialmodelingprep.com/stable/quote?symbol=';
 const OPEN_HOURS = 570; // 9 * 60 + 30
 const CLOSE_HOURS = 960; // 16 * 60
 
@@ -18,9 +21,9 @@ export async function queryApi() {
   const stockTickers = userConfig.stockTickers;
 
   if (stockTickers.length > 0) {
-    console.log(`Calling FMP api with tickers: ${stockTickers}`);
+    console.log(`Calling FMP api with ticker: ${stockTickers[0]}`);
     axios
-      .get(STOCK_ENDPOINT + stockTickers.toString() + '?apikey=' + process.env.FMP_KEY)
+      .get(STOCK_ENDPOINT + stockTickers[0].toString() + '&apikey=' + process.env.FMP_KEY)
       .then(async (res) => {
         for (const ticker of res.data) {
           const filter = { symbol: ticker.symbol };
