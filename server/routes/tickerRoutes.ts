@@ -82,12 +82,14 @@ router.all('/set/tickers', async (req, res) => {
   }
 });
 
-router.all('/cleardb', async (_req, _res) => {
+router.all('/cleardb', async (_req, res) => {
   if (process.env.DB && process.env.DB == 'true') {
     await CryptoDB.deleteMany({});
     await StockDB.deleteMany({});
     await ConfigDB.deleteMany({});
   }
+
+  res.send('DB Cleared');
 });
 
 export default router;
