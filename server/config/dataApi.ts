@@ -2,6 +2,8 @@ import { config } from 'dotenv';
 config();
 
 import axios from 'axios';
+import { Request } from 'express-serve-static-core';
+import { ParsedQs } from 'qs';
 import { StockDB } from '../models/Stock.js';
 import { ConfigDB } from '../models/Config.js';
 
@@ -16,9 +18,17 @@ const STOCK_ENDPOINT = process.env.STOCK_ENDPOINT || 'https://financialmodelingp
 const OPEN_HOURS = 570; // 9 * 60 + 30
 const CLOSE_HOURS = 960; // 16 * 60
 
-export async function queryApi() {
-  const userConfig = (await ConfigDB.findOne({ user: DB_USER }).lean()) || { cryptoTickers: [], stockTickers: [] };
-  const stockTickers = userConfig.stockTickers;
+export async function queryApi(req?: Request<{}, any, any, ParsedQs, Record<string, any>>) {
+  let stockTickers: string[] = [];
+
+  // If using express server only, get tickers from express
+  if (req) {
+    stockTickers = req.app.get('stockTickers') ? req.app.get('stockTickers').split(',') : [];
+    // Otherwise, get tickers from DB
+  } else {
+    const userConfig = (await ConfigDB.findOne({ user: DB_USER }).lean()) || { cryptoTickers: [], stockTickers: [] };
+    stockTickers = userConfig.stockTickers;
+  }
 
   if (stockTickers.length > 0) {
     console.log(`Calling FMP api with ticker: ${stockTickers[0]}`);
@@ -43,14 +53,18 @@ export async function queryApi() {
   }
 }
 
-export function pollApi() {
+// req is undefined when DB is enabled
+export function pollApi(req?: Request<{}, any, any, ParsedQs, Record<string, any>>) {
   const date = new Date();
   const currentTime = (date.getUTCHours() - 4) * 60 + date.getUTCMinutes();
   const isWeekday = date.getDay() % 6 != 0;
   if (OPEN_HOURS <= currentTime && currentTime <= CLOSE_HOURS && isWeekday) {
-    queryApi();
+    queryApi(req);
   } else {
     console.log('Skipped api call, outside trading hours');
   }
-  setTimeout(pollApi, STOCK_TIMEOUT);
+
+  return req == undefined
+    ? setTimeout(() => pollApi(), STOCK_TIMEOUT)
+    : setTimeout(() => req.app.set('pollId', pollApi(req)), STOCK_TIMEOUT);
 }

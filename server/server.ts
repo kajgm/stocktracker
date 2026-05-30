@@ -18,6 +18,9 @@ const EXPRESS_PORT = process.env.PORT || 3000;
 
 export let cbSocket: WebSocket | { close: () => void };
 
+export let localStockTickers: string[] = [];
+export let localCryptoTickers: string[] = [];
+
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
@@ -33,7 +36,7 @@ app.use('/api', tickerRoutes);
 io.on('connection', (socket: Socket) => registerHandlers(io, socket));
 
 server.listen(EXPRESS_PORT, () => {
-  if (process.env.DB && process.env.DB == "true") {
+  if (process.env.DB && process.env.DB == 'true') {
     connectDB().then(() => {
       console.log(`Stocktracker server listening on port ${EXPRESS_PORT}`);
     });
@@ -42,8 +45,9 @@ server.listen(EXPRESS_PORT, () => {
   }
 });
 
-if (process.env.DB && process.env.DB == "true") {
-  cbSocket = await createDataSocket();
-  queryApi();
-  setTimeout(pollApi, STOCK_TIMEOUT);
-}
+cbSocket = await createDataSocket();
+queryApi();
+app.set(
+  'pollId',
+  setTimeout(() => pollApi(), STOCK_TIMEOUT)
+);
