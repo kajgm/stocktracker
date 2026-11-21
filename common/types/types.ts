@@ -34,3 +34,16 @@ export interface ServerToClientEvents {
   tickerUpdate: (quote: TickerQuote) => void;
   tickerError: (error: TickerError) => void;
 }
+
+/** One chart point: [time in ms, price]. */
+export type HistoryPoint = [number, number];
+
+export type HistoryRange = '1h' | '6h' | '1d' | '5d';
+
+/** Response of GET /api/history/:type/:symbol. */
+export interface TickerHistory {
+  symbol: string;
+  type: TickerType;
+  range: HistoryRange;
+  points: HistoryPoint[];
+}
