@@ -150,7 +150,7 @@ Notes:
 - **Public access:** set `ADMIN_TOKEN` so only you can change tickers; the display itself is read-only.
 - **Replicas:** run one server replica. Each replica polls Finnhub separately, so two replicas double API usage, and with in-memory or file storage each one keeps its own ticker list.
 - **Network policies:** policies match pod ports (`8080`, `3000`), not Service ports.
-- **Upgrades:** change the image tags. Displays reconnect automatically when the server restarts, but keep the UI they loaded until their page reloads (see [Restarting the display](#restarting-the-display)).
+- **Upgrades:** change the image tags. Displays reconnect automatically when the server restarts, and load the new UI within about 5 minutes (see [Restarting the display](#restarting-the-display)).
 
 ## Raspberry Pi kiosk
 
@@ -184,7 +184,7 @@ Name=stocktracker
 
 ### Restarting the display
 
-The kiosk has no address bar or reload button, so restart it to pick up a new UI version or recover a stuck screen. Running `startup.sh` again closes the kiosk window and opens a fresh one, which loads the latest UI (the client image serves the page with `no-cache`, so nothing stale is kept). From the Pi's terminal, or over SSH:
+The kiosk has no address bar or reload button. New UI versions load automatically (see below), so restarting is mainly for a stuck screen or a changed kiosk URL. Running `startup.sh` again closes the kiosk window and opens a fresh one, which loads the latest UI (the client image serves the page with `no-cache`, so nothing stale is kept). From the Pi's terminal, or over SSH:
 
 ```sh
 ~/stocktracker/startup.sh
@@ -198,7 +198,9 @@ pkill -f -- '--kiosk'; sleep 2; ~/stocktracker/startup.sh
 
 To restart everything instead (for example after changing the autostart entry), reboot: `sudo reboot`.
 
-**Hosted instance:** deploying a new version (for example a new image tag in Kubernetes) doesn't reload the displays. They reconnect to the new server by themselves, but keep running the UI they loaded until you restart them. **Containers on the Pi:** run `docker compose pull && docker compose up -d` (or `docker compose up -d --build` when building from source) first, then restart the display.
+**New versions load by themselves.** Each display checks every 5 minutes (and about 20 seconds after reconnecting to a restarted server) whether the served `index.html` points at different built files than the page it's running, and reloads if so. A deploy reaches the displays within a few minutes without a restart. The settings page is the exception: it shows a **Reload** prompt instead, so unsaved edits aren't lost, and reloads when you leave it.
+
+With containers on the Pi, updating is `docker compose pull && docker compose up -d` (or `docker compose up -d --build` when building from source); the display then reloads itself the same way.
 
 > If the hosted instance is behind an authentication proxy (for example an SSO login page), the kiosk can't sign in by itself. Allow the Pi's network without login, or serve it from an internal address.
 
