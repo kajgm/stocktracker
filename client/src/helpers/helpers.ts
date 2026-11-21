@@ -1,13 +1,3 @@
-import { DOWN_FILTER, UP_FILTER } from '@/types/types';
-
-/** Arrow style for a price move; keeps the current one when the price is unchanged or unknown. */
-export function priceDirection(currentDirection: string, currentPrice: number, previousPrice: number): string {
-  if (previousPrice < 0) return currentDirection;
-  if (previousPrice > currentPrice) return DOWN_FILTER;
-  if (previousPrice < currentPrice) return UP_FILTER;
-  return currentDirection;
-}
-
 // Credit to: https://stackoverflow.com/a/9462382
 export function concatNumber(num: number, digits: number, extraPrecise?: boolean, ignoreTrailing?: boolean): string {
   const lookup = [

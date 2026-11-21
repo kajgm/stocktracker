@@ -58,6 +58,8 @@ export class FinnhubPoller {
     if (!this.running) return;
     if (!this.opts.apiKey) {
       if (tickers.length) console.warn('FINNHUB_API_KEY is not set; stock tickers will not update');
+      // Show it on the tiles too, not just in the log.
+      for (const symbol of tickers) this.store.fail({ symbol, type: 'STOCK', message: 'FINNHUB_API_KEY not set' });
       return;
     }
     void this.cycle(this.generation, true);

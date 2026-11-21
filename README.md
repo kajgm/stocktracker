@@ -14,6 +14,8 @@ A minimal full-stack tracker for Stocks and Cryptocurrencies. Intended for use o
 
 Stocks are re-quoted every minute while the US market is open (09:30-16:00 New York time, daylight saving aware) and once at startup, so the last close shows outside market hours. Crypto updates stream continuously and are batched to at most two updates per second per ticker.
 
+On the display, the price and arrow follow the day's change (green up, red down). Stocks outside market hours get a **Closed** tag and show which session the price is from (for example "Fri close"). A tile that has had no update for a few minutes while its feed should be live fades and shows how long ago it last updated. Tiles flash briefly when the price moves, at most every 5 seconds.
+
 Built with [Node](https://nodejs.org/), [Vue](https://vuejs.org/), [Vite](https://vitejs.dev/), [Tailwind](https://tailwindcss.com/), [Express](https://expressjs.com/), [Socket.IO](https://socket.io/) and optionally [MongoDB](https://www.mongodb.com/) (a JSON file works too).
 
 ## Prerequisites
@@ -169,9 +171,9 @@ Name=stocktracker
 
 ## Troubleshooting
 
-**Stocks stay on "Connecting...".** Check the server log. Without `FINNHUB_API_KEY` it says so at startup. `HTTP 401`/`403` means a bad key or a symbol outside the free plan (non-US exchanges).
+**A stock tile shows an error.** The tile shows the reason: `FINNHUB_API_KEY not set`, or `HTTP 401`/`403` for a bad key or a symbol outside the free plan (non-US exchanges).
 
-**A ticker shows "Error".** The symbol is unknown to Finnhub or Coinbase. Stock symbols are US listings (`AAPL`); crypto uses Coinbase product ids (`BTC-USD`).
+**A ticker shows "Unknown symbol".** The symbol is unknown to Finnhub or Coinbase. Stock symbols are US listings (`AAPL`); crypto uses Coinbase product ids (`BTC-USD`).
 
 **The screen shows "Server unreachable, retrying...".** The browser can't reach `/socket.io` on the page's origin: check that the server container is running and that your proxy or tunnel allows WebSockets.
 

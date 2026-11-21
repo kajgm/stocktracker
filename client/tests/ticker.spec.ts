@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { useTickerStore } from '@/store/ticker';
-import { DOWN_FILTER, UP_FILTER, defaultTicker } from '@/types/types';
+import { defaultTicker } from '@/types/types';
 
 describe('ticker store', () => {
   beforeEach(() => {
@@ -30,18 +30,14 @@ describe('ticker store', () => {
     expect(store.stockValue('AAPL').curPrice).toBe(100);
   });
 
-  it('applies quotes and tracks direction against the previous price', () => {
+  it('applies quotes with their times', () => {
     const store = useTickerStore();
     store.setTickers({ stock: [], crypto: ['BTC-USD'] });
 
-    store.applyQuote({ symbol: 'BTC-USD', type: 'CRYPTO', price: 100, changePercent: 2, volume: 5, timestamp: 0 });
-    store.applyQuote({ symbol: 'BTC-USD', type: 'CRYPTO', price: 90, changePercent: -8, volume: 6, timestamp: 1 });
-    const down = store.cryptoValue('BTC-USD');
-    expect(down).toMatchObject({ curPrice: 90, prevPrice: 100, dayPercentage: -8, volume: 6, status: 'CONNECTED' });
-    expect(down.dirFilter).toBe(DOWN_FILTER);
-
-    store.applyQuote({ symbol: 'BTC-USD', type: 'CRYPTO', price: 95, changePercent: -5, timestamp: 2 });
-    expect(store.cryptoValue('BTC-USD').dirFilter).toBe(UP_FILTER);
+    store.applyQuote({ symbol: 'BTC-USD', type: 'CRYPTO', price: 90, changePercent: -8, volume: 6, timestamp: 1234 });
+    const quote = store.cryptoValue('BTC-USD');
+    expect(quote).toMatchObject({ curPrice: 90, dayPercentage: -8, volume: 6, status: 'CONNECTED', quoteTime: 1234 });
+    expect(quote.receivedAt).toBeGreaterThan(0);
   });
 
   it('ignores quotes for tickers that are not configured', () => {
@@ -55,6 +51,10 @@ describe('ticker store', () => {
     const store = useTickerStore();
     store.setTickers({ stock: ['NOPE'], crypto: [] });
     store.applyError({ symbol: 'NOPE', type: 'STOCK', message: 'Unknown symbol' });
-    expect(store.stockValue('NOPE').status).toBe('ERROR');
+    expect(store.stockValue('NOPE')).toMatchObject({ status: 'ERROR', error: 'Unknown symbol' });
+
+    // A later quote clears the error.
+    store.applyQuote({ symbol: 'NOPE', type: 'STOCK', price: 1, changePercent: 0, timestamp: 0 });
+    expect(store.stockValue('NOPE').error).toBeUndefined();
   });
 });
