@@ -41,7 +41,9 @@ The client connects to its own origin: the client image (nginx) and the Vite dev
 
 ### Changing tickers at runtime
 
-Through the client container use `http://localhost:8080/api/...`, or your public hostname. Omit the `Authorization` header when `ADMIN_TOKEN` is not set.
+Open `/settings` (for example `https://stocks.example.com/settings`) on a phone or computer to add, remove and reorder tickers, and see whether each one is live. Saving needs the admin token when the server sets `ADMIN_TOKEN`; tick **Remember on this device** to keep it in that browser's local storage. Displays update as soon as you save. Set `TICKERS_FILE` (or `MONGO_URI`) so the changes survive a restart.
+
+Or use the API directly. Through the client container use `http://localhost:8080/api/...`, or your public hostname. Omit the `Authorization` header when `ADMIN_TOKEN` is not set.
 
 ```sh
 curl http://localhost:3000/api/tickers                                   # current lists

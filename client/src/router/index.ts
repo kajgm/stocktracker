@@ -1,6 +1,7 @@
 import { createWebHistory, createRouter } from 'vue-router';
 import TickerGrid from '@/views/TickerGrid.vue';
 const Chart = () => import('@/views/Chart.vue');
+const Settings = () => import('@/views/Settings.vue');
 
 const routes = [
   {
@@ -8,6 +9,12 @@ const routes = [
     component: TickerGrid,
     name: 'home',
     meta: { title: 'Home' }
+  },
+  {
+    path: '/settings',
+    component: Settings,
+    name: 'settings',
+    meta: { title: 'Settings' }
   },
   {
     path: '/:tickerType/:tickerId',
