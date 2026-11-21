@@ -3,7 +3,6 @@ import { useTickerStore } from '@/store/ticker';
 import { concatNumber } from '@/helpers/helpers';
 import { computed } from 'vue';
 import type { TickerData, SizeInfo } from '@/types/types';
-import { defaultTicker } from '@/types/types';
 
 const { tickerId, tickerType, rLink } = defineProps<{
   tickerId: string;
@@ -13,20 +12,20 @@ const { tickerId, tickerType, rLink } = defineProps<{
 
 const tickerStore = useTickerStore();
 
-const ticker = computed<TickerData>(() => {
-  if (tickerType == 'CRYPTO') return tickerStore.cryptoValue(tickerId);
-  if (tickerType == 'STOCK') return tickerStore.stockValue(tickerId);
-  else return defaultTicker;
-});
-const sInfo = computed<SizeInfo>(() => {
-  return tickerStore.tickerSizeInfo;
+const ticker = computed<TickerData>(() =>
+  tickerType == 'CRYPTO' ? tickerStore.cryptoValue(tickerId) : tickerStore.stockValue(tickerId)
+);
+const sInfo = computed<SizeInfo>(() => tickerStore.tickerSizeInfo);
+const percentText = computed<string>(() => {
+  const pct = ticker.value.dayPercentage;
+  return Math.abs(pct) > 0.1 ? pct.toPrecision(3) : pct.toPrecision(1);
 });
 </script>
 
 <template>
   <div class="p-1.5 w-full h-full">
     <div class="bg-zinc-800 rounded-2xl w-full h-full overflow-hidden">
-      <RouterLink :id="ticker.id" :ticker-type="ticker.type" :to="rLink">
+      <RouterLink :to="rLink">
         <div class="p-2 h-full w-full flex flex-wrap flex-col">
           <h1 class="font-medium" :class="sInfo.name">{{ ticker.id }}</h1>
           <div v-if="ticker.status == 'CONNECTING'">
@@ -35,7 +34,7 @@ const sInfo = computed<SizeInfo>(() => {
           <div v-else-if="ticker.status == 'ERROR'">
             <h1 class="font-medium" :class="sInfo.status">Error</h1>
           </div>
-          <div v-else-if="ticker.status == 'CONNECTED'" class="flex grow flex-wrap">
+          <div v-else class="flex grow flex-wrap">
             <div class="inline-flex items-center text-center w-full" :class="sInfo.padding">
               <svg class="w-auto" :class="[ticker.dirFilter, sInfo.iconSize]" viewBox="0 0 31.417 31.416">
                 <path
@@ -47,18 +46,14 @@ const sInfo = computed<SizeInfo>(() => {
               </h1>
             </div>
             <div class="grow flex h-auto items-end justify-end">
-              <h1 class="font-medium inline-block px-1" :class="sInfo.vol">
+              <h1 v-if="ticker.volume !== undefined" class="font-medium inline-block px-1" :class="sInfo.vol">
                 {{ concatNumber(ticker.volume, 2, false, true) }}
               </h1>
               <h1
                 class="font-medium inline-block px-1"
                 :class="[ticker.dayPercentage >= 0 ? 'text-emerald-500' : 'text-red-500', sInfo.percent]"
               >
-                {{
-                  Math.abs(ticker.dayPercentage) > 0.1
-                    ? ticker.dayPercentage.toPrecision(3)
-                    : ticker.dayPercentage.toPrecision(1)
-                }}%
+                {{ percentText }}%
               </h1>
             </div>
           </div>
