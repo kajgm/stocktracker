@@ -1,78 +1,36 @@
-export type TickerType = "STOCK" | "CRYPTO" | undefined;
+// Wire types shared between the server and the client (the client keeps a
+// copy in client/src/types/types.ts because its build context is client/).
 
-export interface TickerData {
+export type TickerType = 'STOCK' | 'CRYPTO';
+
+/** Latest price for one ticker, normalized across data sources. */
+export interface TickerQuote {
   symbol: string;
-  curPrice: number;
-  volume: number;
-  prevPrice: number;
-  dayPercentage: number;
-  dirFilter: string;
-  status: StatusType;
   type: TickerType;
-}
-
-export interface ApiRequestData {
-  symbol: string;
-  name: string;
   price: number;
-  changePercentage: number;
-  change: number;
-  volume: number;
-  dayLow: number;
-  dayHigh: number;
-  yearHigh: number;
-  yearLow: number;
-  marketCap: number;
-  priceAvg50: number;
-  priceAvg200: number;
-  exchange: string;
-  open: number;
-  previousClose: number;
+  /** Percent change since the previous close (stocks) or 24h open (crypto). */
+  changePercent: number;
+  /** Day volume. Not provided by Finnhub's free quote endpoint. */
+  volume?: number;
+  /** Unix epoch milliseconds of the quote. */
   timestamp: number;
 }
 
-export interface WebsocketData {
-  best_ask: string;
-  best_ask_size: string;
-  best_bid: string;
-  best_bid_size: string;
-  high_24h: string;
-  last_size: string;
-  low_24h: string;
-  open_24h: string;
-  price: string;
-  product_id: string;
-  sequence: number;
-  side: string;
-  time: string;
-  trade_id: number;
-  type: string;
-  volume_24h: string;
-  volume_30d: string;
+/** A ticker the server could not fetch (unknown symbol, provider error). */
+export interface TickerError {
+  symbol: string;
+  type: TickerType;
+  message: string;
 }
 
-export type StatusType = "CONNECTED" | "CONNECTING" | "UPDATED" | "ERROR";
-
-export type SizeType = "SMALL" | "MEDIUM" | "LARGE";
-
-export interface SizeInfo {
-  name: string;
-  price: string;
-  status: string;
-  padding: string;
-  iconSize: string;
-  info: string;
+export interface TickerLists {
+  stock: string[];
+  crypto: string[];
 }
 
-export type TypeSizeMap = {
-  [key in SizeType]: SizeInfo;
-};
-
-export const defaultTicker = {
-  curPrice: -1,
-  prevPrice: -1,
-  dayPercentage: -1,
-  dirFilter: "fill-emerald-500 -rotate-90",
-  status: "CONNECTING",
-  type: undefined,
-} as TickerData;
+/** Socket.IO events the server emits to clients. */
+export interface ServerToClientEvents {
+  updateTickers: (tickers: TickerLists) => void;
+  tickerUpdate: (quote: TickerQuote) => void;
+  tickerError: (error: TickerError) => void;
+}

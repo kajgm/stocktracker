@@ -1,38 +1,41 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { mount } from '@vue/test-utils';
-import { type StatusType } from '@/types/types';
 import { useTickerStore } from '@/store/ticker';
 import router from '@/router';
 import App from '@/App.vue';
+
+async function mountApp() {
+  void router.push('/');
+  await router.isReady();
+  return mount(App, { global: { plugins: [router] } });
+}
 
 describe('App', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
-  afterEach(() => {
-    vi.unstubAllEnvs();
-    vi.clearAllMocks();
+  it('shows connecting until the server sends tickers', async () => {
+    const wrapper = await mountApp();
+    expect(wrapper.text()).toContain('Connecting...');
   });
 
-  it('renders the main page with stock and crypto tickers', async () => {
-    const tickerStore = useTickerStore();
+  it('shows an empty state when no tickers are configured', async () => {
+    const store = useTickerStore();
+    store.connection = 'CONNECTED';
+    store.setTickers({ stock: [], crypto: [] });
+    const wrapper = await mountApp();
+    expect(wrapper.text()).toContain('No tickers configured');
+  });
 
-    tickerStore.setExtStatus('CONNECTING' as StatusType, 'CRYPTO');
-    tickerStore.setExtStatus('CONNECTING' as StatusType, 'STOCK');
-
-    void router.push('/');
-    await router.isReady();
-
-    const wrapper = mount(App, {
-      global: {
-        plugins: [router]
-      }
-    });
-
-    expect(wrapper.text()).toContain('Connecting...');
+  it('renders a ticker with its price', async () => {
+    const store = useTickerStore();
+    store.connection = 'CONNECTED';
+    store.setTickers({ stock: ['AAPL'], crypto: [] });
+    store.applyQuote({ symbol: 'AAPL', type: 'STOCK', price: 123.45, changePercent: 1.5, timestamp: 0 });
+    const wrapper = await mountApp();
+    expect(wrapper.text()).toContain('AAPL');
+    expect(wrapper.text()).toContain('$123.45');
   });
 });

@@ -1,19 +1,13 @@
-import { config } from 'dotenv';
-config();
-
 import mongoose from 'mongoose';
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://mongodb-server/stocktracker';
+export async function connectDB(uri: string): Promise<void> {
+  // Log the host only: the URI may carry credentials.
+  const host = uri.replace(/^mongodb(\+srv)?:\/\/([^@]*@)?/, '').split('/')[0];
+  console.log(`Connecting to MongoDB at ${host}`);
+  await mongoose.connect(uri, { serverSelectionTimeoutMS: 10_000 });
+  console.log('MongoDB connected');
+}
 
-const connectDB = async () => {
-  try {
-    console.log('Connecting to: ' + MONGO_URI);
-    await mongoose.connect(MONGO_URI);
-    console.log('MongoDB is connected');
-  } catch (e) {
-    console.log(e);
-    process.exit(1);
-  }
-};
-
-export default connectDB;
+export async function disconnectDB(): Promise<void> {
+  await mongoose.disconnect();
+}

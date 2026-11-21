@@ -4,69 +4,67 @@ A minimal full-stack tracker for Stocks and Cryptocurrencies. Intended for use o
 
 ![Example](docs/example.png)
 
-## Developed With
+## How it works
 
-- [Node](https://nodejs.org/)
-- [Vue](https://vuejs.org/)
-- [Vite](https://vitejs.dev/)
-- [Tailwind](https://tailwindcss.com/)
-- [Express](https://expressjs.com/)
-- [MongoDB](https://www.mongodb.com/)
+| Part | What it does |
+|---|---|
+| `server/` | Express + Socket.IO. Polls [Finnhub](https://finnhub.io/) for stock quotes and streams crypto prices from Coinbase's public WebSocket, then pushes updates to every connected display. |
+| `client/` | Vue single-page app that renders the tickers. Connects to the server over Socket.IO. |
+| MongoDB (optional) | Persists the ticker lists set through the API. Without it, the lists come from environment variables. |
+
+Stocks are re-quoted every minute while the US market is open (09:30-16:00 New York time, daylight saving aware) and once at startup, so the last close shows outside market hours. Crypto updates stream continuously and are batched to at most two updates per second per ticker.
+
+Built with [Node](https://nodejs.org/), [Vue](https://vuejs.org/), [Vite](https://vitejs.dev/), [Tailwind](https://tailwindcss.com/), [Express](https://expressjs.com/), [Socket.IO](https://socket.io/) and optionally [MongoDB](https://www.mongodb.com/).
 
 ## Prerequisites
 
-1. Please ensure the following software is installed
+- [Node](https://nodejs.org/en/download) 22 or later (CI and the `.nvmrc` use Node 26)
+- For stock tickers: a free [Finnhub API key](https://finnhub.io/register). The free plan allows 60 calls per minute and covers US-listed stocks; other exchanges (e.g. TSX) need a paid plan. Crypto needs no key.
 
-- [Node](https://nodejs.org/en/download)
+## Configuration
 
-2. (Optional) To display exchange-traded stock tickers (AAPL, MSFT, etc.), create a Finanical Modeling Prep API key
+Copy `server/.env.template` to `server/.env` and fill it in.
 
-- [https://site.financialmodelingprep.com/](https://site.financialmodelingprep.com/)
+| Variable | Default | Description |
+|---|---|---|
+| `FINNHUB_API_KEY` | (none) | Finnhub key. Without it, stock tickers stay on "Connecting...". |
+| `STOCK_TICKERS` | (none) | Comma-separated US stock symbols, e.g. `AAPL,MSFT` |
+| `CRYPTO_TICKERS` | (none) | Comma-separated Coinbase products, e.g. `BTC-USD,ETH-USD` |
+| `STOCK_POLL_INTERVAL_MS` | `60000` | Stock refresh interval during market hours. Stretched automatically to stay under 60 calls/minute. |
+| `MONGO_URI` | (none) | Persist ticker lists set through the API. Without it, lists set through the API last until restart. |
+| `PORT` | `3000` | Server port |
+| `CORS_ORIGINS` | `http://localhost:8080,http://localhost:5173` | Browser origins allowed to connect |
 
-## Project Setup
+The client reads `VITE_SERVER_URL` (see `client/.env.template`, default `http://localhost:3000/`) at build time.
 
-### Install client and server dependencies
-
-```sh
-cd client
-npm install
-cd ../server
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-cd client
-npm run dev
-```
-
-### Start the configuration server
-
-> Run in another terminal
+### Changing tickers at runtime
 
 ```sh
-cd server
-npm run dev
+curl http://localhost:3000/api/tickers                                   # current lists
+curl -X PUT http://localhost:3000/api/tickers \
+  -H 'Content-Type: application/json' -d '{"stock": ["AAPL", "NVDA"]}'     # replace the stock list
+curl -X PUT http://localhost:3000/api/tickers \
+  -H 'Content-Type: application/json' -d '{"crypto": "BTC-USD,SOL-USD"}'   # replace the crypto list
+curl -X DELETE http://localhost:3000/api/tickers                         # clear both
 ```
 
-### Type-Check, Compile and Minify Client for Production
+A list left out of a `PUT` is unchanged. Connected displays update immediately.
+
+## Development
+
+Install dependencies in both packages, then run the server and client in separate terminals:
 
 ```sh
-npm run build
+cd server && npm install && npm run dev    # http://localhost:3000
+cd client && npm install && npm run dev    # http://localhost:5173
 ```
 
-### Run Client Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-npm run test
-```
-
-### Lint Client with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+| Task | Client (`client/`) | Server (`server/`) |
+|---|---|---|
+| Lint | `npm run lint` | |
+| Type-check | `npm run typecheck` | `npm run typecheck` |
+| Unit tests | `npm test` | `npm test` |
+| Production build | `npm run build` | |
 
 ## Docker Deployment
 
@@ -76,7 +74,7 @@ To deploy with Docker, please follow these steps:
 
    > Tip: Run `sudo usermod -aG docker <user>` to avoid prefixing the following commands with sudo
 
-2. Create the `.env` files from the templates in `/client` and `/server`
+2. Create `server/.env` from `server/.env.template` (and `client/.env` from its template if the server is not on `http://localhost:3000/`)
 
 3. Build the dockerfile within the `/client` directory
 
