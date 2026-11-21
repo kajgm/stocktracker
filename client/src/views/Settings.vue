@@ -4,6 +4,7 @@ import { useTickerStore } from '@/store/ticker';
 import { ApiError, getTickers, saveTickers } from '@/api/tickers';
 import { checkTicker } from '@/helpers/tickers';
 import { loadToken, storeToken } from '@/helpers/adminToken';
+import { updateAvailable } from '@/helpers/updates';
 import type { TickerLists, TickerType } from '@/types/types';
 
 const tickerStore = useTickerStore();
@@ -103,6 +104,10 @@ function discard() {
   message.value = null;
 }
 
+function reloadPage() {
+  window.location.reload();
+}
+
 function onRememberChange() {
   // Unticking forgets a stored token immediately, not just on the next save.
   if (!remember.value) storeToken('', false);
@@ -115,6 +120,15 @@ function onRememberChange() {
       <h1 class="text-2xl font-medium">Tickers</h1>
       <RouterLink to="/" class="text-sm text-zinc-400 underline-offset-2 hover:underline">Back to display</RouterLink>
     </header>
+
+    <div
+      v-if="updateAvailable"
+      class="mb-6 flex items-center justify-between gap-3 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm"
+      role="status"
+    >
+      <span>A new version is available.{{ dirty ? ' Reloading discards unsaved changes.' : '' }}</span>
+      <button type="button" class="shrink-0 rounded-md bg-zinc-700 px-3 py-1" @click="reloadPage">Reload</button>
+    </div>
 
     <p v-if="loading" class="text-zinc-400">Loading...</p>
     <div v-else-if="loadError" class="space-y-3">
