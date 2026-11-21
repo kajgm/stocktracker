@@ -35,6 +35,10 @@ export const env = {
    * until the server restarts.
    */
   tickersFile: process.env.TICKERS_FILE || undefined,
+  /** JSON file for chart history, so it survives restarts. Unset: in memory only. */
+  historyFile: process.env.HISTORY_FILE || undefined,
+  /** Coinbase REST API, for backfilling crypto chart history. */
+  coinbaseRestUrl: process.env.CRYPTO_REST_ENDPOINT || 'https://api.exchange.coinbase.com',
   mongoUri: process.env.MONGO_URI || undefined,
   /** Key of the ticker-list document in MongoDB. */
   configUser: process.env.DB_USER || 'localhost',

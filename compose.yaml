@@ -27,6 +27,8 @@ services:
     environment:
       # Ticker lists changed through the API survive restarts and upgrades.
       TICKERS_FILE: /data/tickers.json
+      # Chart history survives restarts too.
+      HISTORY_FILE: /data/history.json
     volumes:
       - stocktracker-data:/data
     restart: always

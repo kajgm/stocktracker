@@ -1,6 +1,6 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import type { TickerLists } from '../../common/types/types.js';
+import { writeFileAtomic } from '../lib/atomicWrite.js';
 import { parseTickerList } from '../lib/tickers.js';
 import { ConfigDB } from '../models/Config.js';
 
@@ -25,10 +25,7 @@ function toLists(value: unknown): TickerLists {
   };
 }
 
-/**
- * JSON file, e.g. on a small volume. Writes go to a temp file that is renamed
- * over the old one, so a crash mid-write never leaves a half-written file.
- */
+/** JSON file, e.g. on a small volume. Written atomically (see writeFileAtomic). */
 export class FileTickerStore implements TickerStore {
   readonly description: string;
 
@@ -52,10 +49,7 @@ export class FileTickerStore implements TickerStore {
   }
 
   async save(lists: TickerLists): Promise<void> {
-    await mkdir(dirname(this.path), { recursive: true });
-    const tmp = `${this.path}.tmp`;
-    await writeFile(tmp, `${JSON.stringify(lists, null, 2)}\n`, 'utf8');
-    await rename(tmp, this.path);
+    await writeFileAtomic(this.path, `${JSON.stringify(lists, null, 2)}\n`);
   }
 }
 

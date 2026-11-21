@@ -6,9 +6,13 @@ import type { ServerToClientEvents } from '../common/types/types.js';
 import { env } from './config/env.js';
 import { connectDB, disconnectDB } from './config/db.js';
 import { CoinbaseFeed } from './feeds/coinbase.js';
+import { fetchCoinbaseHistory } from './feeds/coinbaseHistory.js';
 import { FinnhubPoller } from './feeds/finnhub.js';
 import { apiRouter } from './routes/api.js';
+import { historyRouter } from './routes/history.js';
 import { registerSocket } from './routes/socket.js';
+import { loadHistoryFile, saveHistoryFile } from './services/historyFile.js';
+import { HistoryStore } from './services/historyStore.js';
 import { QuoteStore } from './services/quoteStore.js';
 import { TickerConfig } from './services/tickerConfig.js';
 import { FileTickerStore, MongoTickerStore, type TickerStore } from './services/tickerStore.js';
@@ -39,6 +43,26 @@ const stocks = new FinnhubPoller(quotes, {
 });
 const crypto = new CoinbaseFeed(quotes, env.coinbaseWsUrl);
 
+// Chart history: every quote, in one-minute buckets. Saved to HISTORY_FILE
+// (when set) every 5 minutes and on shutdown, so stock charts survive a restart.
+const history = new HistoryStore();
+if (env.historyFile) await loadHistoryFile(history, env.historyFile);
+quotes.on('quote', (quote) => history.record(quote));
+const HISTORY_SAVE_MS = 5 * 60_000;
+const historySaver = env.historyFile
+  ? setInterval(() => void saveHistoryFile(history, env.historyFile!), HISTORY_SAVE_MS)
+  : undefined;
+
+/** Fill in the last ~24 h for crypto tickers with no history yet (Coinbase REST, no key). */
+function backfillCrypto(symbols: string[]) {
+  for (const symbol of symbols) {
+    if (history.has('CRYPTO', symbol)) continue;
+    fetchCoinbaseHistory(symbol, env.coinbaseRestUrl)
+      .then((points) => history.seed('CRYPTO', symbol, points))
+      .catch((e: Error) => console.error(`Coinbase history ${symbol}: ${e.message}`));
+  }
+}
+
 // Restart a feed only when its own list changed (a reconnect or a burst of
 // API calls is not free).
 let active = tickers.get();
@@ -46,8 +70,13 @@ const sameList = (a: string[], b: string[]) => a.length === b.length && a.every(
 tickers.on('change', (lists) => {
   quotes.retain('STOCK', lists.stock);
   quotes.retain('CRYPTO', lists.crypto);
+  history.retain('STOCK', lists.stock);
+  history.retain('CRYPTO', lists.crypto);
   if (!sameList(lists.stock, active.stock)) stocks.setTickers(lists.stock);
-  if (!sameList(lists.crypto, active.crypto)) crypto.setTickers(lists.crypto);
+  if (!sameList(lists.crypto, active.crypto)) {
+    crypto.setTickers(lists.crypto);
+    backfillCrypto(lists.crypto);
+  }
   active = lists;
 });
 
@@ -59,6 +88,7 @@ app.get('/healthz', (_req, res) => {
 });
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'short' : 'dev'));
+app.use('/api/history', historyRouter(history, tickers));
 app.use('/api', apiRouter(tickers, env.adminToken));
 
 if (!env.adminToken) {
@@ -71,6 +101,7 @@ registerSocket(io, quotes, tickers);
 
 stocks.start(active.stock);
 crypto.start(active.crypto);
+backfillCrypto(active.crypto);
 
 server.listen(env.port, () => {
   console.log(`Stocktracker server listening on port ${env.port}`);
@@ -81,6 +112,8 @@ async function shutdown(signal: string) {
   console.log(`${signal} received, shutting down`);
   stocks.stop();
   crypto.stop();
+  clearInterval(historySaver);
+  if (env.historyFile) await saveHistoryFile(history, env.historyFile);
   await io.close(); // also closes the HTTP server
   if (env.mongoUri) await disconnectDB();
   process.exit(0);
