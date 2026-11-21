@@ -1,0 +1,41 @@
+# Run stocktracker with Docker Compose, e.g. on the Raspberry Pi itself:
+#   cp server/.env.template server/.env   # add FINNHUB_API_KEY and tickers
+#   docker compose up -d                  # UI on http://localhost:8080
+# Builds from source; replace `build:` with the published image to skip it
+# (image: ghcr.io/kajgm/stocktracker-client:<version>, same for -server).
+
+services:
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    image: stocktracker-client
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_UPSTREAM: stocktracker-server:3000
+    depends_on:
+      - stocktracker-server
+    restart: always
+
+  stocktracker-server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    image: stocktracker-server
+    env_file: server/.env
+    restart: always
+    # To persist ticker lists set through the API, uncomment the mongo service
+    # and set MONGO_URI=mongodb://mongo/stocktracker in server/.env.
+  #   depends_on:
+  #     - mongo
+  #
+  # mongo:
+  #   # MongoDB 5+ needs ARMv8.2: runs on a Pi 5, not on a Pi 4 or older.
+  #   image: mongo:8.2
+  #   volumes:
+  #     - stocktracker-db:/data/db
+  #   restart: always
+
+# volumes:
+#   stocktracker-db:
