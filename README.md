@@ -150,34 +150,55 @@ Notes:
 - **Public access:** set `ADMIN_TOKEN` so only you can change tickers; the display itself is read-only.
 - **Replicas:** run one server replica. Each replica polls Finnhub separately, so two replicas double API usage, and with in-memory or file storage each one keeps its own ticker list.
 - **Network policies:** policies match pod ports (`8080`, `3000`), not Service ports.
-- **Upgrades:** change the image tags. Displays reconnect automatically when the server restarts, and load the new UI on their next page reload.
+- **Upgrades:** change the image tags. Displays reconnect automatically when the server restarts, but keep the UI they loaded until their page reloads (see [Restarting the display](#restarting-the-display)).
 
 ## Raspberry Pi kiosk
 
 The Pi only needs Chromium to show the app. Run the containers on the Pi itself (see [Deploying with Docker](#deploying-with-docker)), or point the Pi at an instance hosted elsewhere.
 
-[startup.sh](startup.sh) opens the app full-screen in Chromium. It works with both `chromium` (Raspberry Pi OS Bookworm and later) and `chromium-browser` (older releases), and reads the URL from `STOCKTRACKER_URL`, defaulting to `http://localhost:8080/`:
+[startup.sh](startup.sh) opens the app full-screen in Chromium. It works with both `chromium` (Raspberry Pi OS Bookworm and later) and `chromium-browser` (older releases). It takes the URL from `STOCKTRACKER_URL`, then from `~/.config/stocktracker/url`, and otherwise opens `http://localhost:8080/` (containers on the Pi itself).
+
+Save the URL once so starting and restarting need no variable:
 
 ```sh
-chmod +x startup.sh
-./startup.sh                                                 # local containers
-STOCKTRACKER_URL=https://stocks.example.com/ ./startup.sh    # hosted instance
+mkdir -p ~/.config/stocktracker
+echo https://stocks.example.com/ > ~/.config/stocktracker/url
+chmod +x ~/stocktracker/startup.sh
+~/stocktracker/startup.sh
 ```
 
-The script sets `DISPLAY=:0`, so it also works over SSH.
+The script targets the Pi's own display (`DISPLAY=:0`), so it also works over SSH.
 
 ### Start on boot
 
-Create `~/.config/autostart/stocktracker.desktop` (replace `<username>`, and drop the `env ...` part when using local containers):
+Create `~/.config/autostart/stocktracker.desktop` (replace `<username>`):
 
 ```ini
 [Desktop Entry]
 Version=1.0
 Type=Application
 Terminal=false
-Exec=env STOCKTRACKER_URL=https://stocks.example.com/ /home/<username>/stocktracker/startup.sh
+Exec=/home/<username>/stocktracker/startup.sh
 Name=stocktracker
 ```
+
+### Restarting the display
+
+The kiosk has no address bar or reload button, so restart it to pick up a new UI version or recover a stuck screen. Running `startup.sh` again closes the kiosk window and opens a fresh one, which loads the latest UI (the client image serves the page with `no-cache`, so nothing stale is kept). From the Pi's terminal, or over SSH:
+
+```sh
+~/stocktracker/startup.sh
+```
+
+After `git pull` brings in a new `startup.sh`, the first restart can't recognise a kiosk window started by the old script. Close that one first:
+
+```sh
+pkill -f -- '--kiosk'; sleep 2; ~/stocktracker/startup.sh
+```
+
+To restart everything instead (for example after changing the autostart entry), reboot: `sudo reboot`.
+
+**Hosted instance:** deploying a new version (for example a new image tag in Kubernetes) doesn't reload the displays. They reconnect to the new server by themselves, but keep running the UI they loaded until you restart them. **Containers on the Pi:** run `docker compose pull && docker compose up -d` (or `docker compose up -d --build` when building from source) first, then restart the display.
 
 > If the hosted instance is behind an authentication proxy (for example an SSO login page), the kiosk can't sign in by itself. Allow the Pi's network without login, or serve it from an internal address.
 
