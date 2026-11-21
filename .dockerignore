@@ -1,4 +1,10 @@
 **/.dockerignore
 **/.git
-**/node_modules
+**/.github
 **/.vscode
+**/node_modules
+**/dist
+**/coverage
+**/.env
+**/*.tsbuildinfo
+docs

@@ -4,6 +4,8 @@ import { isUsMarketOpen } from '../lib/marketHours.js';
 import { InvalidTickerError, parseTickerList } from '../lib/tickers.js';
 import { toTickerQuote as fromFinnhub } from '../feeds/finnhub.js';
 import { toTickerQuote as fromCoinbase } from '../feeds/coinbase.js';
+import { requireToken } from '../routes/api.js';
+import type { Request, Response } from 'express';
 
 describe('isUsMarketOpen', () => {
   it('uses EDT in summer (UTC-4)', () => {
@@ -74,5 +76,40 @@ describe('Coinbase ticker mapping', () => {
       volume: 1234.5,
       timestamp: Date.parse('2026-11-20T00:00:00.000Z')
     });
+  });
+});
+
+describe('requireToken', () => {
+  const run = (token: string | undefined, header?: string) => {
+    let status = 200;
+    let nextCalled = false;
+    const req = { get: () => header } as unknown as Request;
+    const res = {
+      status(code: number) {
+        status = code;
+        return this;
+      },
+      set() {
+        return this;
+      },
+      json() {
+        return this;
+      }
+    } as unknown as Response;
+    requireToken(token)(req, res, () => {
+      nextCalled = true;
+    });
+    return nextCalled ? 200 : status;
+  };
+
+  it('allows everything when no token is configured', () => {
+    assert.equal(run(undefined), 200);
+  });
+
+  it('requires the matching bearer token', () => {
+    assert.equal(run('s3cret'), 401);
+    assert.equal(run('s3cret', 'Bearer wrong'), 401);
+    assert.equal(run('s3cret', 's3cret'), 401);
+    assert.equal(run('s3cret', 'Bearer s3cret'), 200);
   });
 });

@@ -45,5 +45,11 @@ export const env = {
 
   coinbaseWsUrl: process.env.CRYPTO_ENDPOINT || 'wss://ws-feed.exchange.coinbase.com',
 
-  corsOrigins: listFromEnv('CORS_ORIGINS', ['http://localhost:8080', 'http://localhost:5173'])
+  corsOrigins: listFromEnv('CORS_ORIGINS', ['http://localhost:8080', 'http://localhost:5173']),
+
+  /**
+   * Bearer token required for PUT/DELETE /api/tickers. Unset: anyone who can
+   * reach the API can change tickers (fine on localhost, not on the internet).
+   */
+  adminToken: process.env.ADMIN_TOKEN || undefined
 };

@@ -48,9 +48,17 @@ tickers.on('change', (lists) => {
 
 const app = express();
 app.disable('x-powered-by');
+// Probe target, registered before the logger so probes don't flood the log.
+app.get('/healthz', (_req, res) => {
+  res.type('text/plain').send('ok\n');
+});
 app.use(express.json());
-app.use(morgan('dev'));
-app.use('/api', apiRouter(tickers));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'short' : 'dev'));
+app.use('/api', apiRouter(tickers, env.adminToken));
+
+if (!env.adminToken) {
+  console.warn('ADMIN_TOKEN not set; anyone who can reach /api can change tickers');
+}
 
 const server = createServer(app);
 const io = new Server<object, ServerToClientEvents>(server, { cors: { origin: env.corsOrigins } });
