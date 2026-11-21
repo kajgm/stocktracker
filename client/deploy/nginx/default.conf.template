@@ -1,0 +1,69 @@
+# Rendered by the nginx image's envsubst entrypoint; ${SERVER_UPSTREAM} comes
+# from the environment (default set in client/Dockerfile).
+
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    server_tokens off;
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    # add_header inside a location replaces (rather than extends) headers set
+    # at server level, so the security headers are repeated in each location.
+
+    # Liveness/readiness probe target for this container; not logged.
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # REST API and live updates, proxied so the browser only ever talks to one
+    # origin (one tunnel hostname, no CORS).
+    location /api/ {
+        proxy_pass http://${SERVER_UPSTREAM};
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /socket.io/ {
+        proxy_pass http://${SERVER_UPSTREAM};
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # Socket.IO pings every 25s; keep idle WebSockets open well past that.
+        proxy_read_timeout 1h;
+        proxy_send_timeout 1h;
+    }
+
+    # Vite emits content-hashed file names, so these can be cached forever.
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header X-Frame-Options "DENY" always;
+        try_files $uri =404;
+    }
+
+    # index.html must always be revalidated so the kiosk picks up a new deploy
+    # on its next reload instead of a stale bundle reference.
+    location / {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer" always;
+        add_header X-Frame-Options "DENY" always;
+        try_files $uri $uri/ /index.html;
+    }
+}

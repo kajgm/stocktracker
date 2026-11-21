@@ -33,22 +33,25 @@ Copy `server/.env.template` to `server/.env` and fill it in.
 | `STOCK_POLL_INTERVAL_MS` | `60000` | Stock refresh interval during market hours. Stretched automatically to stay under 60 calls/minute. |
 | `MONGO_URI` | (none) | Persist ticker lists set through the API. Without it, lists set through the API last until restart. |
 | `PORT` | `3000` | Server port |
-| `CORS_ORIGINS` | `http://localhost:8080,http://localhost:5173` | Browser origins allowed to connect |
+| `ADMIN_TOKEN` | (none) | When set, `PUT`/`DELETE /api/tickers` need `Authorization: Bearer <token>`. Set it whenever the server is reachable by others. |
+| `CORS_ORIGINS` | `http://localhost:8080,http://localhost:5173` | Browser origins allowed to connect directly. Not needed behind the client image or the dev server, which proxy to the server. |
 
-The client reads `VITE_SERVER_URL` (see `client/.env.template`, default `http://localhost:3000/`) at build time.
+The client connects to its own origin: the client image (nginx) and the Vite dev server both proxy `/api` and `/socket.io` to the server. To point a build at a server on another origin instead, set `VITE_SERVER_URL` at build time (see `client/.env.template`).
 
 ### Changing tickers at runtime
 
+Through the client container use `http://localhost:8080/api/...`, or your public hostname. Omit the `Authorization` header when `ADMIN_TOKEN` is not set.
+
 ```sh
 curl http://localhost:3000/api/tickers                                   # current lists
-curl -X PUT http://localhost:3000/api/tickers \
+curl -X PUT http://localhost:3000/api/tickers -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' -d '{"stock": ["AAPL", "NVDA"]}'     # replace the stock list
-curl -X PUT http://localhost:3000/api/tickers \
+curl -X PUT http://localhost:3000/api/tickers -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' -d '{"crypto": "BTC-USD,SOL-USD"}'   # replace the crypto list
-curl -X DELETE http://localhost:3000/api/tickers                         # clear both
+curl -X DELETE http://localhost:3000/api/tickers -H "Authorization: Bearer $ADMIN_TOKEN"   # clear both
 ```
 
-A list left out of a `PUT` is unchanged. Connected displays update immediately.
+A list left out of a `PUT` is unchanged. Connected displays update immediately. Without MongoDB, changes last until the server restarts.
 
 ## Development
 
@@ -56,7 +59,7 @@ Install dependencies in both packages, then run the server and client in separat
 
 ```sh
 cd server && npm install && npm run dev    # http://localhost:3000
-cd client && npm install && npm run dev    # http://localhost:5173
+cd client && npm install && npm run dev    # http://localhost:5173, proxies to :3000
 ```
 
 | Task | Client (`client/`) | Server (`server/`) |
@@ -64,71 +67,114 @@ cd client && npm install && npm run dev    # http://localhost:5173
 | Lint | `npm run lint` | |
 | Type-check | `npm run typecheck` | `npm run typecheck` |
 | Unit tests | `npm test` | `npm test` |
-| Production build | `npm run build` | |
+| Production build | `npm run build` | `npm run build` (then `npm start`) |
 
-## Docker Deployment
+## Container images
 
-To deploy with Docker, please follow these steps:
+Two images, both built from the repository root:
 
-1. Install [Docker Engine](https://docs.docker.com/engine/install/)
+| Image | Dockerfile | Port | User | Health check | Notes |
+|---|---|---|---|---|---|
+| `stocktracker-client` | [client/Dockerfile](client/Dockerfile) | `8080` | nginx, uid `101` | `GET /healthz` | Serves the UI and proxies `/api` and `/socket.io` to `SERVER_UPSTREAM` (default `stocktracker-server:3000`). Writes only to `/tmp` and `/etc/nginx/conf.d` (the config is rendered from a template at start). |
+| `stocktracker-server` | [server/Dockerfile](server/Dockerfile) | `3000` | node, uid `1000` | `GET /healthz` | Configured with the environment variables above. Writes nothing to disk. |
 
-   > Tip: Run `sudo usermod -aG docker <user>` to avoid prefixing the following commands with sudo
+Because the client proxies to the server, the browser only ever talks to one origin: expose the **client** and keep the server internal.
 
-2. Create `server/.env` from `server/.env.template` (and `client/.env` from its template if the server is not on `http://localhost:3000/`)
+Both images run with a read-only root filesystem and are published for `linux/amd64` and `linux/arm64`.
 
-3. Build the dockerfile within the `/client` directory
+### Published images
+
+[GitHub Actions](.github/workflows/image.yml) builds and smoke-tests both images on every pull request, and publishes them to `ghcr.io/kajgm/stocktracker-client` and `ghcr.io/kajgm/stocktracker-server`:
+
+| Trigger | Tags |
+|---|---|
+| Push to `main` | `main`, `sha-<short>` |
+| Git tag `vX.Y.Z` | `X.Y.Z`, `X.Y` |
+
+To release a version:
 
 ```sh
-docker build -t kajgm/stocktracker-client .
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
-4. Build the dockerfile within the `/server` directory
+Pin deployments to an `X.Y.Z` tag rather than `main`.
+
+## Deploying with Docker
+
+1. Install [Docker Engine](https://docs.docker.com/engine/install/) (on a Raspberry Pi, follow the [Debian instructions](https://docs.docker.com/engine/install/debian/)).
+
+   > Tip: run `sudo usermod -aG docker $USER` and log back in to use Docker without `sudo`.
+
+2. Create `server/.env` from `server/.env.template` and add your Finnhub key and tickers.
+
+3. Start both containers with [compose.yaml](compose.yaml):
+
+   ```sh
+   docker compose up -d
+   ```
+
+4. Open <http://localhost:8080> and check health with `curl http://localhost:8080/healthz`.
+
+To persist ticker lists set through the API, uncomment the `mongo` service in `compose.yaml` and set `MONGO_URI`. MongoDB 5 and later need an ARMv8.2 CPU, so on a Raspberry Pi this works on a Pi 5 but not a Pi 4. Without MongoDB, the tickers come from `STOCK_TICKERS`/`CRYPTO_TICKERS` on every start.
+
+## Deploying on Kubernetes
+
+Run the two images as separate Deployments, each with a Service:
+
+| Workload | Service | Port | Needs |
+|---|---|---|---|
+| server | `stocktracker-server:3000` | `3000` | Secret with `FINNHUB_API_KEY` and `ADMIN_TOKEN`; tickers via env or ConfigMap. Egress: DNS, and HTTPS (443) to `finnhub.io` and `ws-feed.exchange.coinbase.com`. |
+| client | `stocktracker-client:80` → `8080` | `8080` | Egress to the server Service only. `emptyDir` volumes on `/tmp` and `/etc/nginx/conf.d` for a read-only root filesystem. |
+
+Notes:
+
+- **Exposure:** route your ingress, Gateway API `HTTPRoute` or tunnel to the **client** Service only. WebSockets must be allowed (Socket.IO falls back to long-polling if not).
+- **Public access:** set `ADMIN_TOKEN` so only you can change tickers; the display itself is read-only.
+- **Replicas:** run one server replica. Each replica polls Finnhub separately, so two replicas double API usage, and without MongoDB each one keeps its own ticker list.
+- **Network policies:** policies match pod ports (`8080`, `3000`), not Service ports.
+- **Upgrades:** change the image tags. Displays reconnect automatically when the server restarts, and load the new UI on their next page reload.
+
+## Raspberry Pi kiosk
+
+The Pi only needs Chromium to show the app. Run the containers on the Pi itself (see [Deploying with Docker](#deploying-with-docker)), or point the Pi at an instance hosted elsewhere.
+
+[startup.sh](startup.sh) opens the app full-screen in Chromium. It works with both `chromium` (Raspberry Pi OS Bookworm and later) and `chromium-browser` (older releases), and reads the URL from `STOCKTRACKER_URL`, defaulting to `http://localhost:8080/`:
 
 ```sh
-docker build -t kajgm/stocktracker-server .
+chmod +x startup.sh
+./startup.sh                                                 # local containers
+STOCKTRACKER_URL=https://stocks.example.com/ ./startup.sh    # hosted instance
 ```
 
-5. Create a bridge network
+The script sets `DISPLAY=:0`, so it also works over SSH.
 
-```sh
-docker network create -d bridge backend-net
+### Start on boot
+
+Create `~/.config/autostart/stocktracker.desktop` (replace `<username>`, and drop the `env ...` part when using local containers):
+
+```ini
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Exec=env STOCKTRACKER_URL=https://stocks.example.com/ /home/<username>/stocktracker/startup.sh
+Name=stocktracker
 ```
 
-6. Run the client, server, and database containers
-   > Note: If running on a Raspberry Pi, you will need to download an alternative mongodb image. Please see steps under [Deployment on Raspberry Pi](#deployment-on-raspberry-pi)
+> If the hosted instance is behind an authentication proxy (for example an SSO login page), the kiosk can't sign in by itself. Allow the Pi's network without login, or serve it from an internal address.
+
+## Troubleshooting
+
+**Stocks stay on "Connecting...".** Check the server log. Without `FINNHUB_API_KEY` it says so at startup. `HTTP 401`/`403` means a bad key or a symbol outside the free plan (non-US exchanges).
+
+**A ticker shows "Error".** The symbol is unknown to Finnhub or Coinbase. Stock symbols are US listings (`AAPL`); crypto uses Coinbase product ids (`BTC-USD`).
+
+**The screen shows "Server unreachable, retrying...".** The browser can't reach `/socket.io` on the page's origin: check that the server container is running and that your proxy or tunnel allows WebSockets.
+
+**The screen goes blank after a while.** Disable screen blanking:
 
 ```sh
-docker run -d -p 8080:80 --name stocktracker-client --network backend-net --restart always kajgm/stocktracker-client
-docker run -d -p 3000:3000 --name stocktracker-server --network backend-net --env-file=./.env --restart always kajgm/stocktracker-server
-docker run -d --name mongodb-server --network backend-net -v stocktracker:/data/db --restart always mongo
-```
-
-## Deployment on Raspberry Pi
-
-Ensure the Docker deployment steps from above are followed on the target Raspberry Pi
-
-1. Mongodb currently does not support the ARM architecure used on Raspberry Pis. Please use the alternative image provided by themattman [mongodb-raspberrypi-docker](https://github.com/themattman/mongodb-raspberrypi-docker?tab=readme-ov-file#how-to-install)
-
-2. If running these commands over ssh set the $DISPLAY environment variable
-
-```sh
-export DISPLAY=:0
-```
-
-3. Run chromium in fullscreen mode
-
-```sh
-chromium-browser --kiosk --app=http://localhost:8080/ --start-fullscreen --incognito
-```
-
-> Alternatively, you may need to append `nohup` and `&` to run the command in the background (if executing via ssh):
-
-```sh
-nohup chromium-browser --kiosk --app=http://localhost:8080/ --start-fullscreen --incognito &
-```
-
-As an alternative, a startup script has been provided in the root directory `./startup.sh`. Ensure that the script is executable before running or referencing in any automated startup routine.
-
-```sh
-chmod +x <username> ./startup.sh
+sudo raspi-config
+# 2 Display Options > D2 Screen Blanking > No > Finish
 ```
