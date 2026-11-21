@@ -1,57 +1,59 @@
-export type TickerType = 'STOCK' | 'CRYPTO' | undefined;
+// --- Wire types: keep in sync with common/types/types.ts on the server. ---
 
-export interface TickerData {
-  id: string;
-  curPrice: number;
-  volume: number;
-  prevPrice: number;
-  dayPercentage: number;
-  dirFilter: string;
-  status: StatusType;
-  type: TickerType;
-}
+export type TickerType = 'STOCK' | 'CRYPTO';
 
-export interface stockSocketData {
+export interface TickerQuote {
   symbol: string;
-  name: string;
+  type: TickerType;
   price: number;
-  changePercentage: number;
-  change: number;
-  volume: number;
-  dayLow: number;
-  dayHigh: number;
-  yearHigh: number;
-  yearLow: number;
-  marketCap: number;
-  priceAvg50: number;
-  priceAvg200: number;
-  exchange: string;
-  open: number;
-  previousClose: number;
+  /** Percent change since the previous close (stocks) or 24h open (crypto). */
+  changePercent: number;
+  /** Day volume. Not provided for stocks (Finnhub free quote endpoint). */
+  volume?: number;
   timestamp: number;
 }
 
-export interface cryptoSocketData {
-  best_ask: string;
-  best_ask_size: string;
-  best_bid: string;
-  best_bid_size: string;
-  high_24h: string;
-  last_size: string;
-  low_24h: string;
-  open_24h: string;
-  price: string;
-  product_id: string;
-  sequence: number;
-  side: string;
-  time: string;
-  trade_id: number;
-  type: string;
-  volume_24h: string;
-  volume_30d: string;
+export interface TickerError {
+  symbol: string;
+  type: TickerType;
+  message: string;
 }
 
-export type StatusType = 'CONNECTED' | 'CONNECTING' | 'UPDATED' | 'ERROR';
+export interface TickerLists {
+  stock: string[];
+  crypto: string[];
+}
+
+// --- UI state ---
+
+export type StatusType = 'CONNECTED' | 'CONNECTING' | 'ERROR';
+
+export interface TickerData {
+  id: string;
+  type: TickerType;
+  curPrice: number;
+  prevPrice: number;
+  volume?: number;
+  dayPercentage: number;
+  dirFilter: string;
+  status: StatusType;
+}
+
+export const UP_FILTER = 'fill-emerald-500 -rotate-90';
+export const DOWN_FILTER = 'fill-red-500 rotate-90';
+
+/** A fresh placeholder for a ticker with no quote yet. */
+export function defaultTicker(id = '', type: TickerType = 'STOCK'): TickerData {
+  return {
+    id,
+    type,
+    curPrice: -1,
+    prevPrice: -1,
+    dayPercentage: 0,
+    dirFilter: UP_FILTER,
+    status: 'CONNECTING'
+  };
+}
 
 export type SizeType = 'XSMALL' | 'SMALL' | 'MEDIUM' | 'LARGE';
 
@@ -112,12 +114,3 @@ export const SizeMap: TypeSizeMap = {
     percent: 'text-5xl pb-2 w-1/2 text-right'
   }
 };
-
-export const defaultTicker = {
-  curPrice: -1,
-  prevPrice: -1,
-  dayPercentage: -1,
-  dirFilter: 'fill-emerald-500 -rotate-90',
-  status: 'CONNECTING',
-  type: undefined
-} as TickerData;
