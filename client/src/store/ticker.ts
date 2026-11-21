@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import socket from '@/socket/socket';
-import { priceDirection } from '@/helpers/helpers';
 import { defaultTicker, SizeMap } from '@/types/types';
 import type {
   TickerData,
@@ -82,17 +81,17 @@ export const useTickerStore = defineStore('ticker', {
         id: quote.symbol,
         type: quote.type,
         curPrice: quote.price,
-        prevPrice: prev.curPrice,
         volume: quote.volume,
         dayPercentage: quote.changePercent,
-        dirFilter: priceDirection(prev.dirFilter, quote.price, prev.curPrice),
-        status: 'CONNECTED'
+        status: 'CONNECTED',
+        quoteTime: quote.timestamp,
+        receivedAt: Date.now()
       });
     },
     applyError(error: TickerError) {
       const map = this.mapFor(error.type);
       const prev = map.get(error.symbol);
-      if (prev) map.set(error.symbol, { ...prev, status: 'ERROR' });
+      if (prev) map.set(error.symbol, { ...prev, status: 'ERROR', error: error.message });
     }
   }
 });

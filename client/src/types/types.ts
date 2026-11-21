@@ -32,15 +32,16 @@ export interface TickerData {
   id: string;
   type: TickerType;
   curPrice: number;
-  prevPrice: number;
   volume?: number;
   dayPercentage: number;
-  dirFilter: string;
   status: StatusType;
+  /** Provider timestamp of the latest quote (ms). */
+  quoteTime: number;
+  /** When this display last received a quote for the ticker (ms). */
+  receivedAt: number;
+  /** Reason for status 'ERROR'. */
+  error?: string;
 }
-
-export const UP_FILTER = 'fill-emerald-500 -rotate-90';
-export const DOWN_FILTER = 'fill-red-500 rotate-90';
 
 /** A fresh placeholder for a ticker with no quote yet. */
 export function defaultTicker(id = '', type: TickerType = 'STOCK'): TickerData {
@@ -48,10 +49,10 @@ export function defaultTicker(id = '', type: TickerType = 'STOCK'): TickerData {
     id,
     type,
     curPrice: -1,
-    prevPrice: -1,
     dayPercentage: 0,
-    dirFilter: UP_FILTER,
-    status: 'CONNECTING'
+    status: 'CONNECTING',
+    quoteTime: 0,
+    receivedAt: 0
   };
 }
 
@@ -62,8 +63,10 @@ export interface SizeInfo {
   name: string;
   price: string;
   status: string;
+  /** Error message (smaller than status: it can be long). */
+  error: string;
   padding: string;
-  iconSize: string;
+  /** Volume, "Fri close" and error hints. */
   vol: string;
   percent: string;
 }
@@ -75,42 +78,42 @@ export type TypeSizeMap = {
 export const SizeMap: TypeSizeMap = {
   XSMALL: {
     boxSize: { X: 'w-1/4 max-w-1/4', Y: 'h-1/3 max-h-1/3' },
-    name: 'text-l',
-    price: 'text-l max-w-40',
-    status: 'text-l',
+    name: 'text-lg',
+    price: 'text-lg',
+    status: 'text-lg',
+    error: 'text-sm',
     padding: 'pt-1',
-    iconSize: 'h-3',
     vol: 'hidden',
-    percent: 'text-l w-full text-left'
+    percent: 'text-lg w-full text-left'
   },
   SMALL: {
     boxSize: { X: 'w-1/3 max-w-1/3', Y: 'h-1/2 max-h-1/2' },
     name: 'text-2xl',
-    price: 'text-2xl max-w-40',
+    price: 'text-xl',
     status: 'text-2xl',
+    error: 'text-base',
     padding: 'pt-2',
-    iconSize: 'h-4',
     vol: 'hidden',
     percent: 'text-2xl w-full text-left'
   },
   MEDIUM: {
     boxSize: { X: 'w-1/2 max-w-1/2', Y: 'h-1/2 max-h-1/2' },
     name: 'text-4xl',
-    price: 'text-4xl max-w-40',
+    price: 'text-3xl',
     status: 'text-4xl',
+    error: 'text-xl',
     padding: '',
-    iconSize: 'h-5',
-    vol: 'text-2xl w-1/2 text-left',
-    percent: 'text-2xl w-1/2 text-right'
+    vol: 'text-lg text-left',
+    percent: 'text-2xl text-right'
   },
   LARGE: {
     boxSize: { X: 'full', Y: 'full' },
     name: 'text-6xl',
     price: 'text-7xl',
     status: 'text-6xl',
+    error: 'text-4xl',
     padding: 'pl-4 pt-6',
-    iconSize: 'h-10',
-    vol: 'text-5xl pb-2 w-1/2 text-left',
-    percent: 'text-5xl pb-2 w-1/2 text-right'
+    vol: 'text-3xl pb-2 text-left',
+    percent: 'text-5xl pb-2 text-right'
   }
 };
