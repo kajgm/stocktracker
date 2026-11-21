@@ -11,20 +11,25 @@ import { apiRouter } from './routes/api.js';
 import { registerSocket } from './routes/socket.js';
 import { QuoteStore } from './services/quoteStore.js';
 import { TickerConfig } from './services/tickerConfig.js';
+import { FileTickerStore, MongoTickerStore, type TickerStore } from './services/tickerStore.js';
 
-const persist = Boolean(env.mongoUri);
-if (persist) {
-  await connectDB(env.mongoUri!);
+if (env.tickersFile && env.mongoUri) {
+  throw new Error('Set TICKERS_FILE or MONGO_URI, not both');
+}
+let store: TickerStore | undefined;
+if (env.mongoUri) {
+  await connectDB(env.mongoUri);
+  store = new MongoTickerStore(env.configUser);
+} else if (env.tickersFile) {
+  store = new FileTickerStore(env.tickersFile);
 } else {
-  console.log('MONGO_URI not set; ticker lists are kept in memory');
+  console.log('TICKERS_FILE and MONGO_URI not set; ticker changes last until restart');
 }
 
-const tickers = new TickerConfig(
-  { stock: env.defaultStockTickers, crypto: env.defaultCryptoTickers },
-  persist,
-  env.configUser
-);
-await tickers.load();
+const tickers = new TickerConfig({ stock: env.defaultStockTickers, crypto: env.defaultCryptoTickers }, store);
+if ((await tickers.load()) === 'stored') {
+  console.log(`Using tickers saved in ${store!.description} (STOCK_TICKERS/CRYPTO_TICKERS are ignored)`);
+}
 
 const quotes = new QuoteStore();
 const stocks = new FinnhubPoller(quotes, {
@@ -77,7 +82,7 @@ async function shutdown(signal: string) {
   stocks.stop();
   crypto.stop();
   await io.close(); // also closes the HTTP server
-  if (persist) await disconnectDB();
+  if (env.mongoUri) await disconnectDB();
   process.exit(0);
 }
 process.on('SIGTERM', () => void shutdown('SIGTERM'));
