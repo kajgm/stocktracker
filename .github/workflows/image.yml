@@ -1,0 +1,105 @@
+name: Container images
+
+# PRs: build both images (no push) to prove the Dockerfiles work.
+# main:  push ghcr.io/kajgm/stocktracker-{client,server}:main and :sha-<short>.
+# vX.Y.Z tags: push :X.Y.Z and :X.Y, the tags deployments should pin.
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [client, server]
+    steps:
+      - uses: actions/checkout@v4
+
+      # arm64 lets the images run directly on a Raspberry Pi with Docker.
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}-${{ matrix.component }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=branch
+            type=sha,prefix=sha-
+
+      # Start the amd64 image and hit /healthz before publishing anything.
+      - name: Build amd64 image for smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.component }}/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: smoke:${{ matrix.component }}
+          cache-from: type=gha,scope=${{ matrix.component }}
+
+      - name: Smoke test
+        run: |
+          set -eu
+          docker network create smoke
+          if [ "${{ matrix.component }}" = server ]; then
+            docker run -d --name app --network smoke --read-only -p 3000:3000 \
+              -e CRYPTO_TICKERS=BTC-USD smoke:server
+            port=3000
+          else
+            # Stand-in upstream so the /api proxy can be checked too.
+            docker run -d --name stocktracker-server --network smoke nginx:1.30-alpine
+            docker run -d --name app --network smoke --read-only --tmpfs /tmp \
+              --tmpfs /etc/nginx/conf.d:mode=1777 -e SERVER_UPSTREAM=stocktracker-server:80 \
+              -p 8080:8080 smoke:client
+            port=8080
+          fi
+          for i in $(seq 1 20); do
+            curl -fsS "http://localhost:$port/healthz" && break
+            sleep 1
+          done
+          curl -fsS "http://localhost:$port/healthz"
+          if [ "${{ matrix.component }}" = server ]; then
+            curl -fsS "http://localhost:$port/api/tickers" | grep -q BTC-USD
+          else
+            curl -fsS "http://localhost:$port/" | grep -q '<div id="app">'
+            # nginx's default server answers 404 for /api/: proves the proxy reached it.
+            test "$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$port/api/tickers")" = 404
+          fi
+          docker logs app
+
+      - name: Container logs on failure
+        if: failure()
+        run: docker logs app || true
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.component }}/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.component }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.component }}
