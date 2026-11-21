@@ -27,6 +27,7 @@ describe('App', () => {
     store.setTickers({ stock: [], crypto: [] });
     const wrapper = await mountApp();
     expect(wrapper.text()).toContain('No tickers configured');
+    expect(wrapper.find('a[href="/settings"]').exists()).toBe(true);
   });
 
   it('renders a ticker with its price', async () => {
