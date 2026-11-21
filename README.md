@@ -16,6 +16,15 @@ Stocks are re-quoted every minute while the US market is open (09:30-16:00 New Y
 
 Built with [Node](https://nodejs.org/), [Vue](https://vuejs.org/), [Vite](https://vitejs.dev/), [Tailwind](https://tailwindcss.com/), [Express](https://expressjs.com/), [Socket.IO](https://socket.io/) and optionally [MongoDB](https://www.mongodb.com/) (a JSON file works too).
 
+### Charts
+
+Tap a tile to open its chart: 1 hour, 6 hours, 1 day or 5 days of one-minute prices, with a crosshair to read off any point. Ranges end at the latest price, so outside market hours a stock chart shows its last session. The chart goes back to the grid after 5 minutes without a touch.
+
+- **Crypto:** on startup, and when a ticker is added, the last 24 hours are backfilled from Coinbase's public candles API (5-minute closes); the live feed adds one-minute detail from then on.
+- **Stocks:** Finnhub's free plan has no price history, so stock charts fill in from the quotes polled while the market is open. Set `HISTORY_FILE` so they survive restarts.
+
+History is served by `GET /api/history/:type/:symbol?range=1d&points=300` for configured tickers only.
+
 ## Prerequisites
 
 - [Node](https://nodejs.org/en/download) 22 or later (CI and the `.nvmrc` use Node 26)
@@ -32,6 +41,7 @@ Copy `server/.env.template` to `server/.env` and fill it in.
 | `CRYPTO_TICKERS` | (none) | Comma-separated Coinbase products, e.g. `BTC-USD,ETH-USD` |
 | `STOCK_POLL_INTERVAL_MS` | `60000` | Stock refresh interval during market hours. Stretched automatically to stay under 60 calls/minute. |
 | `TICKERS_FILE` | (none) | JSON file that keeps ticker lists changed through the API across restarts, e.g. `/data/tickers.json` on a volume. Created on the first change. |
+| `HISTORY_FILE` | (none) | JSON file for chart history, e.g. `/data/history.json`, saved every 5 minutes and on shutdown. Without it, chart history starts over on every restart. |
 | `MONGO_URI` | (none) | Keep ticker lists in MongoDB instead. Set `TICKERS_FILE` or `MONGO_URI`, not both. |
 | `PORT` | `3000` | Server port |
 | `ADMIN_TOKEN` | (none) | When set, `PUT`/`DELETE /api/tickers` need `Authorization: Bearer <token>`. Set it whenever the server is reachable by others. |
@@ -127,7 +137,7 @@ Run the two images as separate Deployments, each with a Service:
 
 | Workload | Service | Port | Needs |
 |---|---|---|---|
-| server | `stocktracker-server:3000` | `3000` | Secret with `FINNHUB_API_KEY` and `ADMIN_TOKEN`; initial tickers via env or ConfigMap. To keep API changes across restarts, set `TICKERS_FILE=/data/tickers.json` and mount a small `ReadWriteOnce` PVC at `/data` (use the `Recreate` strategy, since only one pod can mount it). Egress: DNS, and HTTPS (443) to `finnhub.io` and `ws-feed.exchange.coinbase.com`. |
+| server | `stocktracker-server:3000` | `3000` | Secret with `FINNHUB_API_KEY` and `ADMIN_TOKEN`; initial tickers via env or ConfigMap. To keep API changes across restarts, set `TICKERS_FILE=/data/tickers.json` and mount a small `ReadWriteOnce` PVC at `/data` (use the `Recreate` strategy, since only one pod can mount it). Egress: DNS, and HTTPS (443) to `finnhub.io`, `ws-feed.exchange.coinbase.com` and `api.exchange.coinbase.com` (chart backfill). |
 | client | `stocktracker-client:80` → `8080` | `8080` | Egress to the server Service only. `emptyDir` volumes on `/tmp` and `/etc/nginx/conf.d` for a read-only root filesystem. |
 
 Notes:
