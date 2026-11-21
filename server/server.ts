@@ -1,49 +1,76 @@
-import { config } from 'dotenv';
-config();
-
 import express from 'express';
 import morgan from 'morgan';
 import { createServer } from 'node:http';
-import { Server, Socket } from 'socket.io';
-import { pollApi, queryApi } from './config/dataApi.js';
-import connectDB from './config/db.js';
-import tickerRoutes from './routes/tickerRoutes.js';
-import createDataSocket from './config/dataSocket.js';
-import registerHandlers from './routes/clientHandlers.js';
+import { Server } from 'socket.io';
+import type { ServerToClientEvents } from '../common/types/types.js';
+import { env } from './config/env.js';
+import { connectDB, disconnectDB } from './config/db.js';
+import { CoinbaseFeed } from './feeds/coinbase.js';
+import { FinnhubPoller } from './feeds/finnhub.js';
+import { apiRouter } from './routes/api.js';
+import { registerSocket } from './routes/socket.js';
+import { QuoteStore } from './services/quoteStore.js';
+import { TickerConfig } from './services/tickerConfig.js';
 
-export const STOCK_TIMEOUT = 100000;
-export const CRYPTO_TIMEOUT = 10000;
-export const DB_USER = process.env.DB_USER || 'localhost';
-const EXPRESS_PORT = process.env.PORT || 3000;
+const persist = Boolean(env.mongoUri);
+if (persist) {
+  await connectDB(env.mongoUri!);
+} else {
+  console.log('MONGO_URI not set; ticker lists are kept in memory');
+}
 
-export let cbSocket: WebSocket | { close: () => void };
+const tickers = new TickerConfig(
+  { stock: env.defaultStockTickers, crypto: env.defaultCryptoTickers },
+  persist,
+  env.configUser
+);
+await tickers.load();
+
+const quotes = new QuoteStore();
+const stocks = new FinnhubPoller(quotes, {
+  apiKey: env.finnhubApiKey,
+  baseUrl: env.finnhubBaseUrl,
+  intervalMs: env.stockPollIntervalMs
+});
+const crypto = new CoinbaseFeed(quotes, env.coinbaseWsUrl);
+
+// Restart a feed only when its own list changed (a reconnect or a burst of
+// API calls is not free).
+let active = tickers.get();
+const sameList = (a: string[], b: string[]) => a.length === b.length && a.every((s, i) => s === b[i]);
+tickers.on('change', (lists) => {
+  quotes.retain('STOCK', lists.stock);
+  quotes.retain('CRYPTO', lists.crypto);
+  if (!sameList(lists.stock, active.stock)) stocks.setTickers(lists.stock);
+  if (!sameList(lists.crypto, active.crypto)) crypto.setTickers(lists.crypto);
+  active = lists;
+});
 
 const app = express();
-const server = createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: ['http://localhost:8080', 'http://localhost:5173']
-  }
-});
-
+app.disable('x-powered-by');
 app.use(express.json());
 app.use(morgan('dev'));
-app.use('/api', tickerRoutes);
+app.use('/api', apiRouter(tickers));
 
-io.on('connection', (socket: Socket) => registerHandlers(io, socket));
+const server = createServer(app);
+const io = new Server<object, ServerToClientEvents>(server, { cors: { origin: env.corsOrigins } });
+registerSocket(io, quotes, tickers);
 
-server.listen(EXPRESS_PORT, () => {
-  if (process.env.DB && process.env.DB == "true") {
-    connectDB().then(() => {
-      console.log(`Stocktracker server listening on port ${EXPRESS_PORT}`);
-    });
-  } else {
-    console.log('Database disabled, running express server only');
-  }
+stocks.start(active.stock);
+crypto.start(active.crypto);
+
+server.listen(env.port, () => {
+  console.log(`Stocktracker server listening on port ${env.port}`);
+  console.log(`Tickers: stock=[${active.stock.join(',')}] crypto=[${active.crypto.join(',')}]`);
 });
 
-if (process.env.DB && process.env.DB == "true") {
-  cbSocket = await createDataSocket();
-  queryApi();
-  setTimeout(pollApi, STOCK_TIMEOUT);
+async function shutdown(signal: string) {
+  console.log(`${signal} received, shutting down`);
+  stocks.stop();
+  crypto.stop();
+  await io.close(); // also closes the HTTP server
+  if (persist) await disconnectDB();
+  process.exit(0);
 }
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));
