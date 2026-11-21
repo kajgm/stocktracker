@@ -24,18 +24,12 @@ services:
       dockerfile: server/Dockerfile
     image: stocktracker-server
     env_file: server/.env
+    environment:
+      # Ticker lists changed through the API survive restarts and upgrades.
+      TICKERS_FILE: /data/tickers.json
+    volumes:
+      - stocktracker-data:/data
     restart: always
-    # To persist ticker lists set through the API, uncomment the mongo service
-    # and set MONGO_URI=mongodb://mongo/stocktracker in server/.env.
-  #   depends_on:
-  #     - mongo
-  #
-  # mongo:
-  #   # MongoDB 5+ needs ARMv8.2: runs on a Pi 5, not on a Pi 4 or older.
-  #   image: mongo:8.2
-  #   volumes:
-  #     - stocktracker-db:/data/db
-  #   restart: always
 
-# volumes:
-#   stocktracker-db:
+volumes:
+  stocktracker-data:

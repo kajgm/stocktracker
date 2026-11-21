@@ -18,7 +18,10 @@ WORKDIR /app
 COPY --from=build-stage /app/server/node_modules ./node_modules
 COPY --from=build-stage /app/server/dist ./dist
 COPY server/package.json ./
-# Built-in non-root `node` user (uid 1000); nothing is written to disk.
+# Mount point for TICKERS_FILE. Owned by `node` so a new Docker volume mounted
+# here is writable; the rest of the filesystem can stay read-only.
+RUN mkdir /data && chown node:node /data
+# Built-in non-root `node` user (uid 1000).
 USER node
 EXPOSE 3000
 CMD ["node", "dist/server/server.js"]

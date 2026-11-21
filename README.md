@@ -10,11 +10,11 @@ A minimal full-stack tracker for Stocks and Cryptocurrencies. Intended for use o
 |---|---|
 | `server/` | Express + Socket.IO. Polls [Finnhub](https://finnhub.io/) for stock quotes and streams crypto prices from Coinbase's public WebSocket, then pushes updates to every connected display. |
 | `client/` | Vue single-page app that renders the tickers. Connects to the server over Socket.IO. |
-| MongoDB (optional) | Persists the ticker lists set through the API. Without it, the lists come from environment variables. |
+| Ticker storage (optional) | Keeps ticker lists changed through the API across restarts: a JSON file (`TICKERS_FILE`) or MongoDB. Without it, the lists come from environment variables on every start. |
 
 Stocks are re-quoted every minute while the US market is open (09:30-16:00 New York time, daylight saving aware) and once at startup, so the last close shows outside market hours. Crypto updates stream continuously and are batched to at most two updates per second per ticker.
 
-Built with [Node](https://nodejs.org/), [Vue](https://vuejs.org/), [Vite](https://vitejs.dev/), [Tailwind](https://tailwindcss.com/), [Express](https://expressjs.com/), [Socket.IO](https://socket.io/) and optionally [MongoDB](https://www.mongodb.com/).
+Built with [Node](https://nodejs.org/), [Vue](https://vuejs.org/), [Vite](https://vitejs.dev/), [Tailwind](https://tailwindcss.com/), [Express](https://expressjs.com/), [Socket.IO](https://socket.io/) and optionally [MongoDB](https://www.mongodb.com/) (a JSON file works too).
 
 ## Prerequisites
 
@@ -31,7 +31,8 @@ Copy `server/.env.template` to `server/.env` and fill it in.
 | `STOCK_TICKERS` | (none) | Comma-separated US stock symbols, e.g. `AAPL,MSFT` |
 | `CRYPTO_TICKERS` | (none) | Comma-separated Coinbase products, e.g. `BTC-USD,ETH-USD` |
 | `STOCK_POLL_INTERVAL_MS` | `60000` | Stock refresh interval during market hours. Stretched automatically to stay under 60 calls/minute. |
-| `MONGO_URI` | (none) | Persist ticker lists set through the API. Without it, lists set through the API last until restart. |
+| `TICKERS_FILE` | (none) | JSON file that keeps ticker lists changed through the API across restarts, e.g. `/data/tickers.json` on a volume. Created on the first change. |
+| `MONGO_URI` | (none) | Keep ticker lists in MongoDB instead. Set `TICKERS_FILE` or `MONGO_URI`, not both. |
 | `PORT` | `3000` | Server port |
 | `ADMIN_TOKEN` | (none) | When set, `PUT`/`DELETE /api/tickers` need `Authorization: Bearer <token>`. Set it whenever the server is reachable by others. |
 | `CORS_ORIGINS` | `http://localhost:8080,http://localhost:5173` | Browser origins allowed to connect directly. Not needed behind the client image or the dev server, which proxy to the server. |
@@ -51,7 +52,9 @@ curl -X PUT http://localhost:3000/api/tickers -H "Authorization: Bearer $ADMIN_T
 curl -X DELETE http://localhost:3000/api/tickers -H "Authorization: Bearer $ADMIN_TOKEN"   # clear both
 ```
 
-A list left out of a `PUT` is unchanged. Connected displays update immediately. Without MongoDB, changes last until the server restarts.
+A list left out of a `PUT` is unchanged. Connected displays update immediately.
+
+With `TICKERS_FILE` or `MONGO_URI` set, changes are saved and survive restarts. Once anything is saved, it replaces `STOCK_TICKERS`/`CRYPTO_TICKERS`, which only seed the first start; the server logs which one it used. To go back to the environment lists, delete the saved file (or the MongoDB document) and restart. Without either, changes last until the server restarts.
 
 ## Development
 
@@ -116,7 +119,7 @@ Pin deployments to an `X.Y.Z` tag rather than `main`.
 
 4. Open <http://localhost:8080> and check health with `curl http://localhost:8080/healthz`.
 
-To persist ticker lists set through the API, uncomment the `mongo` service in `compose.yaml` and set `MONGO_URI`. MongoDB 5 and later need an ARMv8.2 CPU, so on a Raspberry Pi this works on a Pi 5 but not a Pi 4. Without MongoDB, the tickers come from `STOCK_TICKERS`/`CRYPTO_TICKERS` on every start.
+Ticker changes made through the API are saved to `/data/tickers.json` on the `stocktracker-data` volume, so they survive restarts and upgrades. To start over from `STOCK_TICKERS`/`CRYPTO_TICKERS`, run `docker compose down -v` (this deletes the volume) and start again.
 
 ## Deploying on Kubernetes
 
@@ -124,14 +127,14 @@ Run the two images as separate Deployments, each with a Service:
 
 | Workload | Service | Port | Needs |
 |---|---|---|---|
-| server | `stocktracker-server:3000` | `3000` | Secret with `FINNHUB_API_KEY` and `ADMIN_TOKEN`; tickers via env or ConfigMap. Egress: DNS, and HTTPS (443) to `finnhub.io` and `ws-feed.exchange.coinbase.com`. |
+| server | `stocktracker-server:3000` | `3000` | Secret with `FINNHUB_API_KEY` and `ADMIN_TOKEN`; initial tickers via env or ConfigMap. To keep API changes across restarts, set `TICKERS_FILE=/data/tickers.json` and mount a small `ReadWriteOnce` PVC at `/data` (use the `Recreate` strategy, since only one pod can mount it). Egress: DNS, and HTTPS (443) to `finnhub.io` and `ws-feed.exchange.coinbase.com`. |
 | client | `stocktracker-client:80` → `8080` | `8080` | Egress to the server Service only. `emptyDir` volumes on `/tmp` and `/etc/nginx/conf.d` for a read-only root filesystem. |
 
 Notes:
 
 - **Exposure:** route your ingress, Gateway API `HTTPRoute` or tunnel to the **client** Service only. WebSockets must be allowed (Socket.IO falls back to long-polling if not).
 - **Public access:** set `ADMIN_TOKEN` so only you can change tickers; the display itself is read-only.
-- **Replicas:** run one server replica. Each replica polls Finnhub separately, so two replicas double API usage, and without MongoDB each one keeps its own ticker list.
+- **Replicas:** run one server replica. Each replica polls Finnhub separately, so two replicas double API usage, and with in-memory or file storage each one keeps its own ticker list.
 - **Network policies:** policies match pod ports (`8080`, `3000`), not Service ports.
 - **Upgrades:** change the image tags. Displays reconnect automatically when the server restarts, and load the new UI on their next page reload.
 
