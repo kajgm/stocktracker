@@ -29,12 +29,17 @@ function listFromEnv(name: string, fallback: string[]): string[] {
 export const env = {
   port: intFromEnv('PORT', 3000),
 
-  /** When set, ticker lists persist in MongoDB; otherwise they live in memory. */
+  /**
+   * Where ticker lists changed through the API are kept across restarts: a
+   * JSON file (TICKERS_FILE) or MongoDB (MONGO_URI). With neither, they last
+   * until the server restarts.
+   */
+  tickersFile: process.env.TICKERS_FILE || undefined,
   mongoUri: process.env.MONGO_URI || undefined,
   /** Key of the ticker-list document in MongoDB. */
   configUser: process.env.DB_USER || 'localhost',
 
-  /** Tickers used until a list is stored (via the API) or when running without MongoDB. */
+  /** Tickers used until a list is saved through the API. */
   defaultStockTickers: parseTickerList(process.env.STOCK_TICKERS ?? '', 'STOCK'),
   defaultCryptoTickers: parseTickerList(process.env.CRYPTO_TICKERS ?? '', 'CRYPTO'),
 
