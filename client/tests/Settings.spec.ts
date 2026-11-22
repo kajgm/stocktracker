@@ -8,13 +8,28 @@ import { checkTicker } from '@/helpers/tickers';
 
 type Reply = { status: number; body: unknown };
 
-/** fetch stub: GET returns `lists`; PUT returns the next queued reply (default: echo the body). */
-function stubApi(lists = { stock: ['AAPL', 'MSFT'], crypto: ['BTC-USD'] }, putReplies: Reply[] = []) {
-  const fetchMock = vi.fn((_url: string, init?: RequestInit) => {
-    const reply: Reply =
-      init?.method == 'PUT'
-        ? putReplies.shift() ?? { status: 200, body: JSON.parse(init.body as string) as unknown }
-        : { status: 200, body: lists };
+/**
+ * fetch stub: GET /api/tickers returns `lists`; GET /api/auth accepts `adminToken`
+ * (any request when it is ''); PUT returns the next queued reply (default: echo the body).
+ */
+function stubApi({
+  lists = { stock: ['AAPL', 'MSFT'], crypto: ['BTC-USD'] },
+  putReplies = [] as Reply[],
+  adminToken = 's3cret'
+} = {}) {
+  const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+    const authorization = (init?.headers as Record<string, string> | undefined)?.Authorization;
+    let reply: Reply;
+    if (init?.method == 'PUT') {
+      reply = putReplies.shift() ?? { status: 200, body: JSON.parse(init.body as string) as unknown };
+    } else if (url.endsWith('/api/auth')) {
+      reply =
+        adminToken && authorization != `Bearer ${adminToken}`
+          ? { status: 401, body: { error: 'Unauthorized' } }
+          : { status: 200, body: { required: Boolean(adminToken) } };
+    } else {
+      reply = { status: 200, body: lists };
+    }
     return Promise.resolve({
       ok: reply.status < 400,
       status: reply.status,
@@ -31,8 +46,19 @@ async function mountSettings() {
   return wrapper;
 }
 
-const items = (wrapper: Awaited<ReturnType<typeof mountSettings>>, key: string) =>
+type Wrapper = Awaited<ReturnType<typeof mountSettings>>;
+
+const items = (wrapper: Wrapper, key: string) =>
   wrapper.findAll(`[data-testid="${key}-list"] li`).map((li) => li.text().split(/\s+/)[0]);
+
+async function unlock(wrapper: Wrapper, token = 's3cret', remember = false) {
+  await wrapper.get('input[aria-label="Admin token"]').setValue(token);
+  if (remember) await wrapper.get('input[type="checkbox"]').setValue(true);
+  await wrapper.get('form').trigger('submit'); // the unlock form comes first while locked
+  await flushPromises();
+}
+
+const editable = (wrapper: Wrapper) => wrapper.find('button[aria-label="Remove AAPL"]').exists();
 
 describe('Settings', () => {
   beforeEach(() => {
@@ -62,9 +88,27 @@ describe('Settings', () => {
     expect(wrapper.get('[data-testid="stock-list"]').text()).toContain('Waiting');
   });
 
+  it('stays locked until a valid token is entered', async () => {
+    stubApi();
+    const wrapper = await mountSettings();
+    expect(items(wrapper, 'stock')).toEqual(['AAPL', 'MSFT']); // read-only lists still show
+    expect(editable(wrapper)).toBe(false);
+    expect(wrapper.find('input[aria-label="Add a stocks ticker"]').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('Save');
+
+    await unlock(wrapper, 'wrong');
+    expect(wrapper.text()).toContain('That token is wrong.');
+    expect(editable(wrapper)).toBe(false);
+
+    await unlock(wrapper);
+    expect(editable(wrapper)).toBe(true);
+    expect(wrapper.text()).toContain('Editing unlocked');
+  });
+
   it('adds, reorders and removes tickers, then saves both lists with the token', async () => {
     const fetchMock = stubApi();
     const wrapper = await mountSettings();
+    await unlock(wrapper);
     const save = wrapper.get('button[type="submit"]');
     expect(save.attributes('disabled')).toBeDefined(); // nothing changed yet
 
@@ -74,8 +118,7 @@ describe('Settings', () => {
     await wrapper.get('button[aria-label="Remove AAPL"]').trigger('click');
     expect(items(wrapper, 'stock')).toEqual(['NVDA', 'MSFT']);
 
-    await wrapper.get('input[aria-label="Admin token"]').setValue('s3cret');
-    await wrapper.get('form').trigger('submit');
+    await wrapper.get('button[type="submit"]').trigger('submit');
     await flushPromises();
 
     const [url, init] = fetchMock.mock.calls.at(-1)!;
@@ -86,31 +129,63 @@ describe('Settings', () => {
     expect(localStorage.getItem('stocktracker.adminToken')).toBeNull(); // not remembered unless ticked
   });
 
-  it('remembers the token only when asked', async () => {
+  it('remembers the token only when asked, and unlocks with it next time', async () => {
     stubApi();
-    const wrapper = await mountSettings();
-    await wrapper.get('button[aria-label="Remove MSFT"]').trigger('click');
-    await wrapper.get('input[aria-label="Admin token"]').setValue('s3cret');
-    await wrapper.get('input[type="checkbox"]').setValue(true);
-    await wrapper.get('form').trigger('submit');
-    await flushPromises();
+    const first = await mountSettings();
+    await unlock(first, 's3cret', true);
     expect(localStorage.getItem('stocktracker.adminToken')).toBe('s3cret');
+    first.unmount();
+
+    const again = await mountSettings();
+    expect(editable(again)).toBe(true);
+    expect(again.text()).toContain('remembered on this device');
   });
 
-  it('explains a rejected token and keeps the unsaved changes', async () => {
-    stubApi(undefined, [{ status: 401, body: { error: 'Unauthorized' } }]);
+  it('asks again when the remembered token no longer works', async () => {
+    stubApi();
+    localStorage.setItem('stocktracker.adminToken', 'old');
     const wrapper = await mountSettings();
+    expect(editable(wrapper)).toBe(false);
+    expect(wrapper.text()).toContain('The remembered token no longer works');
+    expect(localStorage.getItem('stocktracker.adminToken')).toBeNull();
+  });
+
+  it('needs no token when the server has none', async () => {
+    stubApi({ adminToken: '' });
+    const wrapper = await mountSettings();
+    expect(editable(wrapper)).toBe(true);
+    expect(wrapper.text()).not.toContain('Unlock');
+    expect(wrapper.text()).not.toContain('Lock');
+  });
+
+  it('locks again and forgets the token', async () => {
+    stubApi();
+    const wrapper = await mountSettings();
+    await unlock(wrapper, 's3cret', true);
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text() == 'Lock')!
+      .trigger('click');
+    expect(editable(wrapper)).toBe(false);
+    expect(localStorage.getItem('stocktracker.adminToken')).toBeNull();
+  });
+
+  it('asks for the token again when a save is rejected, keeping the unsaved changes', async () => {
+    stubApi({ putReplies: [{ status: 401, body: { error: 'Unauthorized' } }] });
+    const wrapper = await mountSettings();
+    await unlock(wrapper);
     await wrapper.get('button[aria-label="Remove MSFT"]').trigger('click');
-    await wrapper.get('form').trigger('submit');
+    await wrapper.get('button[type="submit"]').trigger('submit');
     await flushPromises();
-    expect(wrapper.text()).toContain('The admin token is wrong or missing.');
+    expect(wrapper.text()).toContain('The admin token no longer works');
+    expect(editable(wrapper)).toBe(false);
     expect(items(wrapper, 'stock')).toEqual(['AAPL']);
-    expect(wrapper.text()).toContain('Discard changes');
   });
 
   it('rejects malformed and duplicate symbols before saving', async () => {
     stubApi();
     const wrapper = await mountSettings();
+    await unlock(wrapper);
     await wrapper.get('input[aria-label="Add a crypto ticker"]').setValue('BTCUSD');
     await wrapper
       .findAll('button')
