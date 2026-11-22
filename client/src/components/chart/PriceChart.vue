@@ -2,7 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { HistoryPoint } from '@/types/history';
 
-const { points, up, formatPrice, formatTime } = defineProps<{
+// Not destructured: Vue 3.4 would freeze the first points and colour.
+const props = defineProps<{
   points: HistoryPoint[];
   up: boolean;
   formatPrice: (price: number) => string;
@@ -30,8 +31,8 @@ onBeforeUnmount(() => observer?.disconnect());
 const PAD = { top: 8, bottom: 18, left: 0, right: 0 };
 
 const bounds = computed(() => {
-  const prices = points.map((p) => p[1]);
-  const times = points.map((p) => p[0]);
+  const prices = props.points.map((p) => p[1]);
+  const times = props.points.map((p) => p[0]);
   let lo = Math.min(...prices);
   let hi = Math.max(...prices);
   if (hi === lo) {
@@ -52,28 +53,28 @@ const y = (p: number) => {
 };
 
 const line = computed(() =>
-  points.map(([t, p], i) => `${i ? 'L' : 'M'}${x(t).toFixed(1)},${y(p).toFixed(1)}`).join('')
+  props.points.map(([t, p], i) => `${i ? 'L' : 'M'}${x(t).toFixed(1)},${y(p).toFixed(1)}`).join('')
 );
 const area = computed(() => {
-  if (points.length < 2) return '';
+  if (props.points.length < 2) return '';
   const base = (height.value - PAD.bottom).toFixed(1);
-  return `${line.value}L${x(points.at(-1)![0]).toFixed(1)},${base}L${x(points[0][0]).toFixed(1)},${base}Z`;
+  return `${line.value}L${x(props.points.at(-1)![0]).toFixed(1)},${base}L${x(props.points[0][0]).toFixed(1)},${base}Z`;
 });
 
-const high = computed(() => points.reduce((a, b) => (b[1] > a[1] ? b : a), points[0]));
-const low = computed(() => points.reduce((a, b) => (b[1] < a[1] ? b : a), points[0]));
+const high = computed(() => props.points.reduce((a, b) => (b[1] > a[1] ? b : a), props.points[0]));
+const low = computed(() => props.points.reduce((a, b) => (b[1] < a[1] ? b : a), props.points[0]));
 
 // Crosshair: nearest point to the pointer.
 const hover = ref<HistoryPoint | null>(null);
 function onMove(e: PointerEvent) {
-  if (!points.length || !el.value) return;
+  if (!props.points.length || !el.value) return;
   const px = e.clientX - el.value.getBoundingClientRect().left;
-  let best = points[0];
-  for (const p of points) if (Math.abs(x(p[0]) - px) < Math.abs(x(best[0]) - px)) best = p;
+  let best = props.points[0];
+  for (const p of props.points) if (Math.abs(x(p[0]) - px) < Math.abs(x(best[0]) - px)) best = p;
   hover.value = best;
 }
 
-const stroke = computed(() => (up ? '#10b981' : '#ef4444'));
+const stroke = computed(() => (props.up ? '#10b981' : '#ef4444'));
 </script>
 
 <template>
@@ -85,7 +86,13 @@ const stroke = computed(() => (up ? '#10b981' : '#ef4444'));
     @pointerdown="onMove"
     @pointerleave="hover = null"
   >
-    <svg v-if="width && height && points.length > 1" :width="width" :height="height" class="block" aria-hidden="true">
+    <svg
+      v-if="width && height && props.points.length > 1"
+      :width="width"
+      :height="height"
+      class="block"
+      aria-hidden="true"
+    >
       <path :d="area" :fill="stroke" fill-opacity="0.12" />
       <path :d="line" fill="none" :stroke="stroke" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
       <template v-if="hover">
@@ -101,7 +108,7 @@ const stroke = computed(() => (up ? '#10b981' : '#ef4444'));
       </template>
     </svg>
 
-    <template v-if="points.length > 1">
+    <template v-if="props.points.length > 1">
       <!-- High/low on the right, times along the bottom. -->
       <span class="absolute right-1 top-0 rounded bg-zinc-900/80 px-1 text-xs text-zinc-400 tabular-nums">{{
         formatPrice(high[1])
@@ -111,8 +118,8 @@ const stroke = computed(() => (up ? '#10b981' : '#ef4444'));
         :style="{ bottom: `${PAD.bottom}px` }"
         >{{ formatPrice(low[1]) }}</span
       >
-      <span class="absolute left-0 bottom-0 text-xs text-zinc-500">{{ formatTime(points[0][0]) }}</span>
-      <span class="absolute right-1 bottom-0 text-xs text-zinc-500">{{ formatTime(points.at(-1)![0]) }}</span>
+      <span class="absolute left-0 bottom-0 text-xs text-zinc-500">{{ formatTime(props.points[0][0]) }}</span>
+      <span class="absolute right-1 bottom-0 text-xs text-zinc-500">{{ formatTime(props.points.at(-1)![0]) }}</span>
       <span
         v-if="hover"
         class="absolute left-1 top-0 rounded bg-zinc-800/90 px-1.5 text-xs text-zinc-200 tabular-nums"

@@ -27,6 +27,10 @@ Tap a tile to open its chart: 1 hour, 6 hours, 1 day or 5 days of one-minute pri
 
 History is served by `GET /api/history/:type/:symbol?range=1d&points=300` for configured tickers only.
 
+### On a phone
+
+Portrait phones (narrower than 768px and taller than 560px) get a chart-first layout instead of the tile grid: the selected ticker's price and chart on top, every ticker in a list below. Tap a row to switch the chart; the URL (`/CRYPTO/BTC-USD`) keeps the selection. The settings button opens `/settings`. The kiosk display and landscape phones keep the tile grid.
+
 ## Prerequisites
 
 - [Node](https://nodejs.org/en/download) 22 or later (CI and the `.nvmrc` use Node 26)
