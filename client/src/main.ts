@@ -4,6 +4,7 @@ import { useTickerStore } from './store/ticker';
 import socket from './socket/socket';
 import { startClock } from './helpers/now';
 import { createUpdateChecker } from './helpers/updates';
+import { watchViewport } from './helpers/viewport';
 import App from './App.vue';
 import router from './router';
 import './assets/main.css';
@@ -15,6 +16,7 @@ app.use(router);
 useTickerStore().bindEvents();
 socket.connect();
 startClock();
+watchViewport();
 
 void router.isReady().then(() => {
   app.mount('#app');
