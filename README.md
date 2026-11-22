@@ -112,7 +112,7 @@ Both images run with a read-only root filesystem and are published for `linux/am
 | Push to `main` | `main`, `sha-<short>` |
 | Git tag `vX.Y.Z` | `X.Y.Z`, `X.Y` |
 
-To release a version:
+To release a version, run the [Release](.github/workflows/release.yml) workflow from the Actions tab with the version (e.g. `1.5.0`) and the branch or commit to release (default `main`). It tags the commit `vX.Y.Z`, publishes a GitHub release with generated notes, and starts the image build for the tag. Or tag it yourself:
 
 ```sh
 git tag v1.0.0
