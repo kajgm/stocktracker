@@ -1,0 +1,72 @@
+name: Release
+
+# Run from the Actions tab (or the API) to release a version: tags the commit
+# vX.Y.Z, publishes a GitHub release with generated notes, and starts the
+# image build for the tag.
+#
+# A tag pushed with GITHUB_TOKEN does not trigger other workflows, so the
+# image build is started explicitly; workflow_dispatch is the exception
+# GITHUB_TOKEN is allowed to trigger.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without the v, e.g. 1.5.0"
+        required: true
+        type: string
+      ref:
+        description: "Branch or commit SHA to release"
+        required: false
+        default: main
+        type: string
+
+permissions:
+  contents: write # push the tag, create the release
+  actions: write # start the image workflow
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Check version
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must look like 1.5.0, got '$VERSION'"
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "::error::v$VERSION already exists"
+            exit 1
+          fi
+
+      - name: Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: GitHub release
+        run: gh release create "v$VERSION" --verify-tag --generate-notes --title "v$VERSION"
+
+      - name: Build images
+        run: gh workflow run image.yml --ref "v$VERSION" -f version="v$VERSION"
+
+      - name: Summary
+        run: |
+          {
+            echo "Released v$VERSION at $(git rev-parse --short HEAD)."
+            echo "Images ghcr.io/${GITHUB_REPOSITORY}-{client,server}:$VERSION are building in the Container images workflow."
+          } >> "$GITHUB_STEP_SUMMARY"

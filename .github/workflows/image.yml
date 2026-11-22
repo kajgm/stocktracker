@@ -3,11 +3,19 @@ name: Container images
 # PRs: build both images (no push) to prove the Dockerfiles work.
 # main:  push ghcr.io/kajgm/stocktracker-{client,server}:main and :sha-<short>.
 # vX.Y.Z tags: push :X.Y.Z and :X.Y, the tags deployments should pin.
+# Dispatch: run on a tag ref with its version (the Release workflow does this,
+# since tags it pushes don't trigger push events).
 on:
   pull_request:
   push:
     branches: [main]
     tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag to build, e.g. v1.5.0 (run on that tag)"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -43,8 +51,8 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}-${{ matrix.component }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}},value=${{ inputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.version }}
             type=ref,event=branch
             type=sha,prefix=sha-
 
