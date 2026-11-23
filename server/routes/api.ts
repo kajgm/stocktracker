@@ -40,6 +40,12 @@ export function apiRouter(tickers: TickerConfig, adminToken: string | undefined)
   const router = Router();
   const auth = requireToken(adminToken);
 
+  // Lets the settings page check a token before editing: 200 when the token is
+  // valid or none is configured (`required` says which), 401 otherwise.
+  router.get('/auth', auth, (_req, res) => {
+    res.set('Cache-Control', 'no-store').json({ required: Boolean(adminToken) });
+  });
+
   router.get('/tickers', (_req, res) => {
     res.json(tickers.get());
   });

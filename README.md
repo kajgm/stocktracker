@@ -50,14 +50,14 @@ Copy `server/.env.template` to `server/.env` and fill it in.
 | `HISTORY_FILE` | (none) | JSON file for chart history, e.g. `/data/history.json`, saved every 5 minutes and on shutdown. Without it, chart history starts over on every restart. |
 | `MONGO_URI` | (none) | Keep ticker lists in MongoDB instead. Set `TICKERS_FILE` or `MONGO_URI`, not both. |
 | `PORT` | `3000` | Server port |
-| `ADMIN_TOKEN` | (none) | When set, `PUT`/`DELETE /api/tickers` need `Authorization: Bearer <token>`. Set it whenever the server is reachable by others. |
+| `ADMIN_TOKEN` | (none) | When set, `PUT`/`DELETE /api/tickers` need `Authorization: Bearer <token>` (`GET /api/auth` checks a token without changing anything). Set it whenever the server is reachable by others. |
 | `CORS_ORIGINS` | `http://localhost:8080,http://localhost:5173` | Browser origins allowed to connect directly. Not needed behind the client image or the dev server, which proxy to the server. |
 
 The client connects to its own origin: the client image (nginx) and the Vite dev server both proxy `/api` and `/socket.io` to the server. To point a build at a server on another origin instead, set `VITE_SERVER_URL` at build time (see `client/.env.template`).
 
 ### Changing tickers at runtime
 
-Open `/settings` (for example `https://stocks.example.com/settings`) on a phone or computer to add, remove and reorder tickers, and see whether each one is live. Saving needs the admin token when the server sets `ADMIN_TOKEN`; tick **Remember on this device** to keep it in that browser's local storage. Displays update as soon as you save. Set `TICKERS_FILE` (or `MONGO_URI`) so the changes survive a restart.
+Open `/settings` (for example `https://stocks.example.com/settings`) on a phone or computer to add, remove and reorder tickers, and see whether each one is live. When the server sets `ADMIN_TOKEN`, the lists are read-only until you unlock the page with the token; tick **Remember on this device** to keep it in that browser's local storage, and **Lock** to forget it again. Displays update as soon as you save. Set `TICKERS_FILE` (or `MONGO_URI`) so the changes survive a restart.
 
 Or use the API directly. Through the client container use `http://localhost:8080/api/...`, or your public hostname. Omit the `Authorization` header when `ADMIN_TOKEN` is not set.
 
@@ -112,7 +112,7 @@ Both images run with a read-only root filesystem and are published for `linux/am
 | Push to `main` | `main`, `sha-<short>` |
 | Git tag `vX.Y.Z` | `X.Y.Z`, `X.Y` |
 
-To release a version, run the [Release](.github/workflows/release.yml) workflow from the Actions tab with the version (e.g. `1.5.0`) and the branch or commit to release (default `main`). It tags the commit `vX.Y.Z`, publishes a GitHub release with generated notes, and starts the image build for the tag. Or tag it yourself:
+To release a version, run the [Release](.github/workflows/release.yml) workflow on `main` from the Actions tab. Pick which part of the version to increase (patch, minor or major, from the latest `vX.Y.Z` tag), or enter an exact version to use instead. It tags the latest commit on `main`, publishes a GitHub release with notes since the previous tag, and starts the image build for the tag. Or tag it yourself:
 
 ```sh
 git tag v1.0.0
