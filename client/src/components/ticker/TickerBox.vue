@@ -38,7 +38,7 @@ const staleMinutes = computed(() => {
 });
 const up = computed(() => ticker.value.dayPercentage >= 0);
 
-const priceClass = computed(() => (closed.value ? 'text-zinc-300' : up.value ? 'text-emerald-500' : 'text-red-500'));
+const priceClass = computed(() => (closed.value ? 'text-ink-2' : 'text-ink'));
 const footnote = computed(() => {
   const t = ticker.value;
   if (staleMinutes.value) return `${staleMinutes.value}m ago`;
@@ -72,43 +72,45 @@ watch(
 onBeforeUnmount(() => clearTimeout(flashTimer));
 
 const boxClass = computed(() => {
-  if (flash.value == 'up') return 'bg-emerald-950/60 ring-2 ring-inset ring-emerald-500';
-  if (flash.value == 'down') return 'bg-red-950/60 ring-2 ring-inset ring-red-500';
-  return 'bg-zinc-800';
+  if (flash.value == 'up') return 'bg-ok-soft border-ok';
+  if (flash.value == 'down') return 'bg-bad-soft border-bad';
+  return 'bg-paper-2 border-rule';
 });
 </script>
 
 <template>
-  <div class="p-1.5 w-full h-full">
+  <div class="p-1 w-full h-full">
     <div
-      class="rounded-2xl w-full h-full overflow-hidden transition-colors duration-300"
+      class="rounded-card border w-full h-full overflow-hidden transition-colors duration-300"
       :class="[boxClass, { 'opacity-50': staleMinutes }]"
       :data-state="staleMinutes ? 'stale' : closed ? 'closed' : ticker.status.toLowerCase()"
     >
-      <RouterLink :to="rLink">
+      <RouterLink :to="rLink" class="block h-full rounded-card focus-visible:outline-offset-[-2px]">
         <div class="p-2 h-full w-full flex flex-col">
           <div class="flex items-center justify-between gap-1">
-            <h1 class="font-medium truncate" :class="sInfo.name">{{ ticker.id }}</h1>
-            <span v-if="closed" class="shrink-0 rounded-md bg-zinc-700 px-1.5 text-xs font-medium text-zinc-300"
+            <h1 class="font-medium text-ink-2 truncate" :class="sInfo.name">{{ ticker.id }}</h1>
+            <span
+              v-if="closed"
+              class="shrink-0 rounded border border-rule px-1.5 text-xs font-medium leading-5 text-muted"
               >Closed</span
             >
           </div>
           <div v-if="ticker.status == 'CONNECTING'">
-            <h1 class="font-medium" :class="sInfo.status">Connecting...</h1>
+            <p class="font-medium text-muted" :class="sInfo.status">Connecting...</p>
           </div>
           <div v-else-if="ticker.status == 'ERROR'" class="flex grow flex-col">
-            <p class="font-medium text-red-400 break-words" :class="sInfo.error">{{ ticker.error || 'Error' }}</p>
-            <p v-if="errorHint(ticker.error ?? '')" class="mt-auto text-zinc-400" :class="sInfo.vol">
+            <p class="font-medium text-bad break-words" :class="sInfo.error">{{ ticker.error || 'Error' }}</p>
+            <p v-if="errorHint(ticker.error ?? '')" class="mt-auto text-muted" :class="sInfo.vol">
               {{ errorHint(ticker.error ?? '') }}
             </p>
           </div>
           <div v-else class="flex grow flex-col">
-            <h1 class="font-medium tabular-nums" :class="[priceClass, sInfo.price, sInfo.padding]">
+            <p class="measured leading-none tracking-tight" :class="[priceClass, sInfo.price, sInfo.padding]">
               {{ formatPrice(ticker.curPrice) }}
-            </h1>
-            <div class="mt-auto flex items-end justify-between gap-1 font-medium">
-              <span class="text-zinc-400 truncate" :class="sInfo.vol">{{ footnote }}</span>
-              <span class="shrink-0 tabular-nums" :class="[up ? 'text-emerald-500' : 'text-red-500', sInfo.percent]">
+            </p>
+            <div class="mt-auto flex items-end justify-between gap-1">
+              <span class="measured text-muted truncate" :class="sInfo.vol">{{ footnote }}</span>
+              <span class="measured shrink-0" :class="[up ? 'text-ok' : 'text-bad', sInfo.percent]">
                 {{ up ? '&#9650;' : '&#9660;' }} {{ formatPercent(ticker.dayPercentage) }}
               </span>
             </div>

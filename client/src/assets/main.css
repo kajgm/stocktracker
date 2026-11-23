@@ -1,24 +1,20 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Console (deal 2/3, seed live-stock-crypto-price-0993·391fc9ac·2026-11-23·r0) · redesign: full
+ * nav: kept (kiosk grid, chart, phone list, settings) · signature: the price reading in the measured face · states: connecting, error, empty, stale, closed, loading · console: graphite
+ * axes: dark/grotesk-sans/chromatic-amber · posture: restrained · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H3 E4 S4 R4 V4 · weakest: H, a kiosk tile has no hero; the price is set as the reading instead */
+@import url('./tokens.css');
+@import url('./base.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  color: #ebebeba3;
-  background: #181818;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
-    sans-serif;
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+}
+
+/* What an instrument measured: prices, percentages, volumes, times. */
+.measured {
+  font-family: var(--font-outlier);
+  font-variant-numeric: tabular-nums slashed-zero;
 }

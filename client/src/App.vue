@@ -22,19 +22,21 @@ const routeParam = (key: string) => {
   <RouterView v-if="isSettings" />
   <MobileHome v-else-if="showMobile" :ticker-type="routeParam('tickerType')" :ticker-id="routeParam('tickerId')" />
   <div v-else class="flex h-screen">
-    <div v-if="!ready" class="m-auto px-4 text-center">
-      <h1 class="font-medium text-4xl">
+    <div v-if="!ready" class="m-auto px-4 text-center" role="status">
+      <h1 class="mx-auto min-w-0 break-words text-3xl" :class="tickerStore.connection == 'ERROR' ? 'text-bad' : 'text-ink-2'">
         {{ tickerStore.connection == 'ERROR' ? 'Server unreachable, retrying...' : 'Connecting...' }}
       </h1>
     </div>
     <div v-else-if="tickerStore.tickerCount > 0" class="w-pi-w h-pi-h m-auto">
       <RouterView />
     </div>
-    <div v-else class="m-auto max-w-md px-4 text-center">
-      <h1 class="text-4xl">No tickers configured.</h1>
-      <p class="mt-3 text-lg text-zinc-400">
-        <RouterLink to="/settings" class="underline">Add tickers</RouterLink>, or set STOCK_TICKERS / CRYPTO_TICKERS on
-        the server.
+    <div v-else class="m-auto max-w-md px-4">
+      <h1 class="text-3xl">No tickers configured.</h1>
+      <p class="mt-3 text-muted">
+        <RouterLink to="/settings" class="text-ink underline decoration-rule-2 hover:text-accent"
+          >Add tickers</RouterLink
+        >, or set <span class="measured text-ink-2">STOCK_TICKERS</span> /
+        <span class="measured text-ink-2">CRYPTO_TICKERS</span> on the server.
       </p>
     </div>
   </div>

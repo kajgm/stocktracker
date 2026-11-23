@@ -92,8 +92,8 @@ describe('Phone layout', () => {
     store.applyQuote({ symbol: 'AAPL', type: 'STOCK', price: 95, changePercent: -1, timestamp: T0 });
     const wrapper = await mountAt('/');
     const change = wrapper.get('[data-testid="change"]');
-    expect(change.text()).toBe('-$5.00 (-5.00%) · 1D');
-    expect(change.classes()).toContain('text-red-400');
+    expect(change.text()).toBe('-$5.00 (-5.00%)');
+    expect(change.classes()).toContain('text-bad');
   });
 
   it('keeps the tile grid on the kiosk display', async () => {

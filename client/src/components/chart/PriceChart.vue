@@ -74,7 +74,7 @@ function onMove(e: PointerEvent) {
   hover.value = best;
 }
 
-const stroke = computed(() => (props.up ? '#10b981' : '#ef4444'));
+const stroke = computed(() => (props.up ? 'var(--color-ok)' : 'var(--color-bad)'));
 </script>
 
 <template>
@@ -93,38 +93,41 @@ const stroke = computed(() => (props.up ? '#10b981' : '#ef4444'));
       class="block"
       aria-hidden="true"
     >
-      <path :d="area" :fill="stroke" fill-opacity="0.12" />
-      <path :d="line" fill="none" :stroke="stroke" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+      <path :d="area" :style="{ fill: stroke }" fill-opacity="0.12" />
+      <path :d="line" fill="none" :style="{ stroke }" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
       <template v-if="hover">
         <line
           :x1="x(hover[0])"
           :x2="x(hover[0])"
           :y1="PAD.top"
           :y2="height - PAD.bottom"
-          stroke="#a1a1aa"
+          style="stroke: var(--color-muted)"
           stroke-dasharray="3 3"
         />
-        <circle :cx="x(hover[0])" :cy="y(hover[1])" r="4" :fill="stroke" />
+        <circle :cx="x(hover[0])" :cy="y(hover[1])" r="4" :style="{ fill: stroke }" />
       </template>
     </svg>
 
     <template v-if="props.points.length > 1">
       <!-- High/low on the right, times along the bottom. -->
-      <span class="absolute right-1 top-0 rounded bg-zinc-900/80 px-1 text-xs text-zinc-400 tabular-nums">{{
+      <span class="absolute right-1 top-0 measured rounded bg-paper-3 px-1 text-xs text-muted">{{
         formatPrice(high[1])
       }}</span>
       <span
-        class="absolute right-1 rounded bg-zinc-900/80 px-1 text-xs text-zinc-400 tabular-nums"
+        class="absolute right-1 measured rounded bg-paper-3 px-1 text-xs text-muted"
         :style="{ bottom: `${PAD.bottom}px` }"
         >{{ formatPrice(low[1]) }}</span
       >
-      <span class="absolute left-0 bottom-0 text-xs text-zinc-500">{{ formatTime(props.points[0][0]) }}</span>
-      <span class="absolute right-1 bottom-0 text-xs text-zinc-500">{{ formatTime(props.points.at(-1)![0]) }}</span>
+      <span class="absolute left-0 bottom-0 measured text-xs text-muted">{{ formatTime(props.points[0][0]) }}</span>
+      <span class="absolute right-1 bottom-0 measured text-xs text-muted">{{
+        formatTime(props.points.at(-1)![0])
+      }}</span>
       <span
         v-if="hover"
-        class="absolute left-1 top-0 rounded bg-zinc-800/90 px-1.5 text-xs text-zinc-200 tabular-nums"
+        class="absolute left-1 top-0 measured flex gap-2 rounded border border-rule bg-paper-3 px-1.5 text-xs text-ink"
         data-testid="hover"
-        >{{ formatPrice(hover[1]) }} · {{ formatTime(hover[0]) }}</span
+        ><span>{{ formatPrice(hover[1]) }}</span
+        ><span class="text-muted">{{ formatTime(hover[0]) }}</span></span
       >
     </template>
   </div>

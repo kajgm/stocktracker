@@ -45,10 +45,10 @@ const isUp = (t: TickerData) => t.dayPercentage >= 0;
 
 const status = computed(() => {
   const t = selected.value;
-  if (t.status == 'ERROR') return { label: t.error || 'Error', dot: 'bg-red-400' };
-  if (t.status == 'CONNECTING') return { label: 'Connecting...', dot: 'bg-zinc-500' };
-  if (isClosed(t)) return { label: `Closed · ${closeLabel(t.quoteTime, new Date(now.value))}`, dot: 'bg-zinc-500' };
-  return { label: 'Live', dot: 'bg-emerald-400' };
+  if (t.status == 'ERROR') return { label: t.error || 'Error', tone: 'text-bad' };
+  if (t.status == 'CONNECTING') return { label: 'Connecting...', tone: 'text-muted' };
+  if (isClosed(t)) return { label: 'Closed', detail: closeLabel(t.quoteTime, new Date(now.value)), tone: 'text-muted' };
+  return { label: 'Live', tone: 'text-ok' };
 });
 
 const price = computed(() => {
@@ -62,13 +62,14 @@ const headline = computed(() => {
     const { amount, percent } = change.value;
     const sign = amount >= 0 ? '+' : '-';
     return {
-      text: `${sign}${formatPrice(Math.abs(amount))} (${formatPercent(percent)}) · ${range.value.toUpperCase()}`,
+      text: `${sign}${formatPrice(Math.abs(amount))} (${formatPercent(percent)})`,
+      period: `over ${range.value}`,
       up: amount >= 0
     };
   }
   const t = selected.value;
   if (t.status != 'CONNECTED') return null;
-  return { text: `${formatPercent(t.dayPercentage)} · Today`, up: isUp(t) };
+  return { text: formatPercent(t.dayPercentage), period: 'today', up: isUp(t) };
 });
 
 const clock = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' });
@@ -86,14 +87,14 @@ const isSelected = (t: TickerData) => t.type == selected.value.type && t.id == s
     <header class="px-4">
       <div class="flex items-center justify-between gap-2">
         <div class="flex min-w-0 items-center gap-2">
-          <h1 class="truncate text-xl font-semibold text-zinc-100" data-testid="symbol">{{ selected.id }}</h1>
-          <span class="h-2 w-2 shrink-0 rounded-full" :class="status.dot" aria-hidden="true"></span>
-          <span class="truncate text-sm text-zinc-400">{{ status.label }}</span>
+          <h1 class="truncate text-xl text-ink" data-testid="symbol">{{ selected.id }}</h1>
+          <span class="truncate text-sm font-medium" :class="status.tone">{{ status.label }}</span>
+          <span v-if="status.detail" class="truncate text-sm text-muted">{{ status.detail }}</span>
         </div>
         <RouterLink
           to="/settings"
           aria-label="Settings"
-          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-zinc-400"
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-pill border border-rule bg-paper-2 text-muted hover:text-ink"
         >
           <svg
             width="20"
@@ -109,15 +110,14 @@ const isSelected = (t: TickerData) => t.type == selected.value.type && t.id == s
           </svg>
         </RouterLink>
       </div>
-      <p class="mt-1 text-4xl font-semibold tracking-tight text-zinc-100 tabular-nums" data-testid="price">
+      <p class="measured mt-1 text-4xl tracking-tight text-ink" data-testid="price">
         {{ price }}
       </p>
-      <p
-        class="mt-1 min-h-6 font-medium tabular-nums"
-        :class="headline?.up ? 'text-emerald-400' : 'text-red-400'"
-        data-testid="change"
-      >
-        {{ headline?.text }}
+      <p class="mt-1 flex min-h-6 items-baseline gap-2">
+        <span class="measured" :class="headline?.up ? 'text-ok' : 'text-bad'" data-testid="change">{{
+          headline?.text
+        }}</span>
+        <span class="text-sm text-muted">{{ headline?.period }}</span>
       </p>
     </header>
 
@@ -129,7 +129,7 @@ const isSelected = (t: TickerData) => t.type == selected.value.type && t.id == s
         :format-price="formatPrice"
         :format-time="formatTime"
       />
-      <p v-else class="absolute inset-0 flex items-center justify-center text-center text-zinc-400">
+      <p v-else class="absolute inset-0 flex items-center justify-center text-center text-muted">
         <template v-if="state == 'loading'">Loading chart...</template>
         <template v-else-if="state == 'error'">Couldn't load the chart. Retrying...</template>
         <template v-else-if="type == 'STOCK'">No history yet. Stock charts fill in while the market is open.</template>
@@ -142,8 +142,8 @@ const isSelected = (t: TickerData) => t.type == selected.value.type && t.id == s
         v-for="r in HISTORY_RANGES"
         :key="r"
         type="button"
-        class="h-10 rounded-lg text-sm font-semibold uppercase"
-        :class="r == range ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-400'"
+        class="h-10 rounded-pill border text-sm font-medium transition-colors"
+        :class="r == range ? 'border-cool bg-cool-soft text-cool' : 'border-transparent text-muted'"
         :aria-pressed="r == range"
         @click="range = r"
       >
@@ -152,35 +152,33 @@ const isSelected = (t: TickerData) => t.type == selected.value.type && t.id == s
     </nav>
 
     <section
-      class="mt-4 flex-1 rounded-t-3xl bg-[#222225] px-2 pt-2 pb-[max(env(safe-area-inset-bottom),1rem)]"
+      class="mt-4 flex-1 border-t border-rule bg-paper-2 px-2 pt-2 pb-[max(env(safe-area-inset-bottom),1rem)]"
       aria-label="Tickers"
     >
       <ul>
         <li v-for="t in all" :key="t.type + '/' + t.id">
           <button
             type="button"
-            class="flex h-12 w-full items-center gap-2.5 rounded-xl px-2.5 text-left"
-            :class="isSelected(t) ? 'bg-zinc-700/60' : 'active:bg-zinc-800'"
+            class="flex h-12 w-full items-center gap-2.5 rounded-pill border px-2.5 text-left"
+            :class="isSelected(t) ? 'border-rule-2 bg-paper-3' : 'border-transparent active:bg-paper-3'"
             :aria-current="isSelected(t) ? 'true' : undefined"
             :data-testid="'row-' + t.id"
             @click="select(t)"
           >
-            <span class="w-24 truncate font-semibold text-zinc-100">{{ t.id }}</span>
-            <span v-if="isClosed(t)" class="rounded-md bg-zinc-700 px-1.5 text-xs font-medium text-zinc-300"
+            <span class="w-24 truncate font-medium text-ink">{{ t.id }}</span>
+            <span v-if="isClosed(t)" class="rounded border border-rule px-1.5 text-xs font-medium text-muted"
               >Closed</span
             >
             <template v-if="t.status == 'CONNECTED'">
-              <span class="ml-auto font-medium text-zinc-100 tabular-nums">{{ formatPrice(t.curPrice) }}</span>
-              <span
-                class="w-16 text-right text-sm font-semibold tabular-nums"
-                :class="isUp(t) ? 'text-emerald-400' : 'text-red-400'"
-                >{{ formatPercent(t.dayPercentage) }}</span
-              >
+              <span class="measured ml-auto text-ink">{{ formatPrice(t.curPrice) }}</span>
+              <span class="measured w-20 text-right text-sm" :class="isUp(t) ? 'text-ok' : 'text-bad'">{{
+                formatPercent(t.dayPercentage)
+              }}</span>
             </template>
-            <span v-else-if="t.status == 'ERROR'" class="ml-auto truncate text-sm text-red-400">{{
+            <span v-else-if="t.status == 'ERROR'" class="ml-auto truncate text-sm text-bad">{{
               t.error || 'Error'
             }}</span>
-            <span v-else class="ml-auto text-sm text-zinc-400">Connecting...</span>
+            <span v-else class="ml-auto text-sm text-muted">Connecting...</span>
           </button>
         </li>
       </ul>
