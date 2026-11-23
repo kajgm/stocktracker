@@ -23,7 +23,10 @@ const routeParam = (key: string) => {
   <MobileHome v-else-if="showMobile" :ticker-type="routeParam('tickerType')" :ticker-id="routeParam('tickerId')" />
   <div v-else class="flex h-screen">
     <div v-if="!ready" class="m-auto px-4 text-center" role="status">
-      <h1 class="mx-auto min-w-0 break-words text-3xl" :class="tickerStore.connection == 'ERROR' ? 'text-bad' : 'text-ink-2'">
+      <h1
+        class="mx-auto min-w-0 break-words text-3xl"
+        :class="tickerStore.connection == 'ERROR' ? 'text-bad' : 'text-ink-2'"
+      >
         {{ tickerStore.connection == 'ERROR' ? 'Server unreachable, retrying...' : 'Connecting...' }}
       </h1>
     </div>
