@@ -78,42 +78,42 @@ export type TypeSizeMap = {
 export const SizeMap: TypeSizeMap = {
   XSMALL: {
     boxSize: { X: 'w-1/4 max-w-1/4', Y: 'h-1/3 max-h-1/3' },
-    name: 'text-lg',
-    price: 'text-lg',
-    status: 'text-lg',
+    name: 'text-sm',
+    price: 'text-base',
+    status: 'text-sm',
     error: 'text-sm',
     padding: 'pt-1',
     vol: 'hidden',
-    percent: 'text-lg w-full text-left'
+    percent: 'text-sm w-full text-left'
   },
   SMALL: {
     boxSize: { X: 'w-1/3 max-w-1/3', Y: 'h-1/2 max-h-1/2' },
-    name: 'text-2xl',
+    name: 'text-base',
     price: 'text-xl',
-    status: 'text-2xl',
+    status: 'text-base',
     error: 'text-base',
     padding: 'pt-2',
     vol: 'hidden',
-    percent: 'text-2xl w-full text-left'
+    percent: 'text-lg w-full text-left'
   },
   MEDIUM: {
     boxSize: { X: 'w-1/2 max-w-1/2', Y: 'h-1/2 max-h-1/2' },
-    name: 'text-4xl',
+    name: 'text-xl',
     price: 'text-3xl',
-    status: 'text-4xl',
+    status: 'text-xl',
     error: 'text-xl',
-    padding: '',
-    vol: 'text-lg text-left',
-    percent: 'text-2xl text-right'
+    padding: 'pt-1',
+    vol: 'text-sm text-left',
+    percent: 'text-xl text-right'
   },
   LARGE: {
     boxSize: { X: 'full', Y: 'full' },
-    name: 'text-6xl',
+    name: 'text-3xl',
     price: 'text-7xl',
-    status: 'text-6xl',
+    status: 'text-3xl',
     error: 'text-4xl',
     padding: 'pl-4 pt-6',
-    vol: 'text-3xl pb-2 text-left',
-    percent: 'text-5xl pb-2 text-right'
+    vol: 'text-xl pb-2 text-left',
+    percent: 'text-4xl pb-2 text-right'
   }
 };

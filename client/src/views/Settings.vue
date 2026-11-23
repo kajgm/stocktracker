@@ -133,14 +133,14 @@ function move(key: keyof TickerLists, index: number, by: -1 | 1) {
 }
 
 /** What the display currently shows for a saved ticker. */
-function status(type: TickerType, symbol: string): { label: string; dot: string } {
+function status(type: TickerType, symbol: string): { label: string; tone: string } {
   if (!(type == 'STOCK' ? saved.value.stock : saved.value.crypto).includes(symbol)) {
-    return { label: 'Not saved', dot: 'bg-zinc-500' };
+    return { label: 'Not saved', tone: 'text-accent' };
   }
   const data = type == 'STOCK' ? tickerStore.stockDataMap.get(symbol) : tickerStore.cryptoDataMap.get(symbol);
-  if (data?.status == 'CONNECTED') return { label: 'Live', dot: 'bg-emerald-500' };
-  if (data?.status == 'ERROR') return { label: 'Error', dot: 'bg-red-500' };
-  return { label: 'Waiting', dot: 'bg-zinc-500' };
+  if (data?.status == 'CONNECTED') return { label: 'Live', tone: 'text-ok' };
+  if (data?.status == 'ERROR') return { label: 'Error', tone: 'text-bad' };
+  return { label: 'Waiting', tone: 'text-muted' };
 }
 
 async function save() {
@@ -172,47 +172,61 @@ function reloadPage() {
 </script>
 
 <template>
-  <main class="mx-auto w-full max-w-md px-4 py-6 text-zinc-200">
+  <main class="mx-auto w-full max-w-md px-4 py-6 text-ink">
     <header class="mb-6 flex items-baseline justify-between">
-      <h1 class="text-2xl font-medium">Tickers</h1>
-      <RouterLink to="/" class="text-sm text-zinc-400 underline-offset-2 hover:underline">Back to display</RouterLink>
+      <h1 class="text-3xl">Tickers</h1>
+      <RouterLink to="/" class="text-sm text-muted underline decoration-rule-2 hover:text-accent"
+        >Back to display</RouterLink
+      >
     </header>
 
     <div
       v-if="updateAvailable"
-      class="mb-6 flex items-center justify-between gap-3 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm"
+      class="mb-6 flex items-center justify-between gap-3 rounded-card border border-rule bg-paper-2 px-3 py-2 text-sm"
       role="status"
     >
       <span>A new version is available.{{ dirty ? ' Reloading discards unsaved changes.' : '' }}</span>
-      <button type="button" class="shrink-0 rounded-md bg-zinc-700 px-3 py-1" @click="reloadPage">Reload</button>
+      <button
+        type="button"
+        class="shrink-0 inline-flex h-9 items-center rounded-pill border border-rule-2 bg-paper-2 px-3 text-sm font-medium text-ink transition-colors hover:bg-paper-3"
+        @click="reloadPage"
+      >
+        Reload
+      </button>
     </div>
 
-    <p v-if="loading" class="text-zinc-400">Loading...</p>
+    <p v-if="loading" class="text-muted">Loading...</p>
     <div v-else-if="loadError" class="space-y-3">
-      <p class="text-red-400">{{ loadError }}</p>
-      <button type="button" class="rounded-md bg-zinc-700 px-3 py-1.5 text-sm" @click="load">Try again</button>
+      <p class="text-bad">{{ loadError }}</p>
+      <button
+        type="button"
+        class="inline-flex h-9 items-center rounded-pill border border-rule-2 bg-paper-2 px-3 text-sm font-medium text-ink transition-colors hover:bg-paper-3"
+        @click="load"
+      >
+        Try again
+      </button>
     </div>
 
     <div v-else class="space-y-8">
-      <form v-if="!editable" class="rounded-lg border border-zinc-700 p-4" @submit.prevent="unlock">
-        <h2 class="text-lg font-medium">Unlock to edit</h2>
-        <p class="mb-3 text-sm text-zinc-400">Enter the server's admin token to change the tickers.</p>
+      <form v-if="!editable" class="rounded-card border border-rule bg-paper-2 p-4" @submit.prevent="unlock">
+        <h2 class="text-xl">Unlock to edit</h2>
+        <p class="mb-3 text-sm text-muted">Enter the server's admin token to change the tickers.</p>
         <input
           v-model="tokenInput"
           type="password"
           aria-label="Admin token"
           autocomplete="current-password"
-          class="w-full rounded-md border border-zinc-600 bg-zinc-800 px-3 py-2"
+          class="h-9 w-full rounded-pill border border-rule bg-paper-3 px-3 text-ink focus-visible:outline-offset-[-2px]"
           @input="unlockError = ''"
         />
-        <label class="mt-2 flex items-center gap-2 text-sm text-zinc-400">
-          <input v-model="remember" type="checkbox" />
+        <label class="mt-2 flex items-center gap-2 text-sm text-muted">
+          <input v-model="remember" type="checkbox" class="h-4 w-4 accent-accent" />
           Remember on this device
         </label>
-        <p v-if="unlockError" class="mt-2 text-sm text-red-400" role="alert">{{ unlockError }}</p>
+        <p v-if="unlockError" class="mt-2 text-sm text-bad" role="alert">{{ unlockError }}</p>
         <button
           type="submit"
-          class="mt-3 w-full rounded-md bg-emerald-600 px-4 py-2 font-medium text-white disabled:opacity-50"
+          class="mt-3 inline-flex h-10 w-full items-center justify-center whitespace-nowrap rounded-pill bg-accent px-4 font-medium text-accent-ink transition-opacity disabled:cursor-not-allowed disabled:opacity-55"
           :disabled="unlocking"
         >
           {{ unlocking ? 'Checking...' : 'Unlock' }}
@@ -220,29 +234,38 @@ function reloadPage() {
       </form>
       <div
         v-else-if="tokenRequired"
-        class="flex items-center justify-between gap-3 rounded-lg border border-zinc-700 px-3 py-2 text-sm"
+        class="flex items-center justify-between gap-3 rounded-card border border-rule bg-paper-2 px-3 py-2 text-sm"
       >
-        <span class="text-zinc-400">Editing unlocked{{ remember ? ' · remembered on this device' : '' }}</span>
-        <button type="button" class="rounded-md bg-zinc-700 px-3 py-1" @click="lock">Lock</button>
+        <span class="text-muted">Editing unlocked{{ remember ? ' · remembered on this device' : '' }}</span>
+        <button
+          type="button"
+          class="inline-flex h-9 items-center rounded-pill border border-rule-2 bg-paper-2 px-3 text-sm font-medium text-ink transition-colors hover:bg-paper-3"
+          @click="lock"
+        >
+          Lock
+        </button>
       </div>
 
       <form class="space-y-8" @submit.prevent="save">
         <section v-for="s in sections" :key="s.key" :aria-labelledby="`${s.key}-title`">
-          <h2 :id="`${s.key}-title`" class="text-lg font-medium">{{ s.title }}</h2>
-          <p class="mb-3 text-sm text-zinc-400">{{ s.hint }}</p>
+          <h2 :id="`${s.key}-title`" class="text-xl">{{ s.title }}</h2>
+          <p class="mb-3 text-sm text-muted">{{ s.hint }}</p>
 
-          <ul class="mb-3 divide-y divide-zinc-700 rounded-lg border border-zinc-700" :data-testid="`${s.key}-list`">
-            <li v-if="!draft[s.key].length" class="px-3 py-2 text-sm text-zinc-500">None</li>
+          <ul
+            class="mb-3 divide-y divide-rule overflow-hidden rounded-card border border-rule bg-paper-2"
+            :data-testid="`${s.key}-list`"
+          >
+            <li v-if="!draft[s.key].length" class="px-3 py-2 text-sm text-muted">None</li>
             <li v-for="(symbol, i) in draft[s.key]" :key="symbol" class="flex items-center gap-2 px-3 py-2">
-              <span class="font-medium">{{ symbol }}</span>
-              <span class="flex items-center gap-1.5 text-xs text-zinc-400">
-                <span class="inline-block h-2 w-2 rounded-full" :class="status(s.type, symbol).dot"></span>
+              <span class="measured text-ink">{{ symbol }}</span
+              >{{ ' ' }}
+              <span class="text-xs font-medium" :class="status(s.type, symbol).tone">
                 {{ status(s.type, symbol).label }}
               </span>
               <span v-if="editable" class="ml-auto flex gap-1">
                 <button
                   type="button"
-                  class="rounded px-2 text-zinc-400 hover:bg-zinc-700 disabled:opacity-30"
+                  class="flex h-9 w-9 items-center justify-center rounded-pill text-muted transition-colors hover:bg-paper-3 hover:text-ink disabled:cursor-not-allowed disabled:opacity-55"
                   :disabled="i == 0"
                   :aria-label="`Move ${symbol} up`"
                   @click="move(s.key, i, -1)"
@@ -251,7 +274,7 @@ function reloadPage() {
                 </button>
                 <button
                   type="button"
-                  class="rounded px-2 text-zinc-400 hover:bg-zinc-700 disabled:opacity-30"
+                  class="flex h-9 w-9 items-center justify-center rounded-pill text-muted transition-colors hover:bg-paper-3 hover:text-ink disabled:cursor-not-allowed disabled:opacity-55"
                   :disabled="i == draft[s.key].length - 1"
                   :aria-label="`Move ${symbol} down`"
                   @click="move(s.key, i, 1)"
@@ -260,7 +283,7 @@ function reloadPage() {
                 </button>
                 <button
                   type="button"
-                  class="rounded px-2 text-zinc-400 hover:bg-zinc-700 hover:text-red-400"
+                  class="flex h-9 w-9 items-center justify-center rounded-pill text-muted transition-colors hover:bg-paper-3 hover:text-bad"
                   :aria-label="`Remove ${symbol}`"
                   @click="remove(s.key, i)"
                 >
@@ -278,15 +301,19 @@ function reloadPage() {
               autocapitalize="characters"
               autocomplete="off"
               spellcheck="false"
-              class="min-w-0 flex-1 rounded-md border border-zinc-600 bg-zinc-800 px-3 py-1.5 uppercase placeholder:normal-case placeholder:text-zinc-500"
+              class="measured h-9 min-w-0 flex-1 rounded-pill border border-rule bg-paper-3 px-3 uppercase text-ink placeholder:normal-case placeholder:text-muted focus-visible:outline-offset-[-2px]"
               @input="inputErrors[s.key] = ''"
               @keydown.enter.prevent="add(s.key, s.type)"
             />
-            <button type="button" class="rounded-md bg-zinc-700 px-3 py-1.5 text-sm" @click="add(s.key, s.type)">
+            <button
+              type="button"
+              class="inline-flex h-9 items-center rounded-pill border border-rule-2 bg-paper-2 px-3 text-sm font-medium text-ink transition-colors hover:bg-paper-3"
+              @click="add(s.key, s.type)"
+            >
               Add
             </button>
           </div>
-          <p v-if="editable && inputErrors[s.key]" class="mt-1 text-sm text-red-400" role="alert">
+          <p v-if="editable && inputErrors[s.key]" class="mt-1 text-sm text-bad" role="alert">
             {{ inputErrors[s.key] }}
           </p>
         </section>
@@ -294,18 +321,23 @@ function reloadPage() {
         <div v-if="editable" class="flex items-center gap-3">
           <button
             type="submit"
-            class="rounded-md bg-emerald-600 px-4 py-2 font-medium text-white disabled:opacity-50"
+            class="inline-flex h-10 items-center whitespace-nowrap rounded-pill bg-accent px-4 font-medium text-accent-ink transition-opacity disabled:cursor-not-allowed disabled:opacity-55"
             :disabled="saving || !dirty"
           >
             {{ saving ? 'Saving...' : 'Save' }}
           </button>
-          <button v-if="dirty" type="button" class="text-sm text-zinc-400 hover:underline" @click="discard">
+          <button
+            v-if="dirty"
+            type="button"
+            class="text-sm text-muted underline decoration-rule-2 hover:text-accent"
+            @click="discard"
+          >
             Discard changes
           </button>
         </div>
         <p
           v-if="message"
-          :class="message.kind == 'ok' ? 'text-emerald-400' : 'text-red-400'"
+          :class="message.kind == 'ok' ? 'text-ok' : 'text-bad'"
           :role="message.kind == 'ok' ? 'status' : 'alert'"
         >
           {{ message.text }}

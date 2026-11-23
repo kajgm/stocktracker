@@ -48,8 +48,8 @@ describe('TickerBox', () => {
     expect(box.text()).toContain('$60,187.66');
     expect(box.text()).toContain('-2.45%');
     expect(box.text()).toContain('31.8k BTC');
-    expect(box.find('.text-red-500').exists()).toBe(true);
-    expect(box.find('.text-emerald-500').exists()).toBe(false);
+    expect(box.find('.text-bad').exists()).toBe(true);
+    expect(box.find('.text-ok').exists()).toBe(false);
   });
 
   it('marks stocks closed outside market hours with the close day', () => {
@@ -102,20 +102,20 @@ describe('TickerBox', () => {
 
     store.applyQuote({ symbol: 'BTC-USD', type: 'CRYPTO', price: 101, changePercent: 2, timestamp: MONDAY_OPEN + 1 });
     await nextTick();
-    expect(box.find('.ring-emerald-500').exists()).toBe(true);
+    expect(box.find('.border-ok').exists()).toBe(true);
 
     vi.advanceTimersByTime(700);
     await nextTick();
-    expect(box.find('.ring-emerald-500').exists()).toBe(false);
+    expect(box.find('.border-ok').exists()).toBe(false);
 
     // Further ticks within 5 s don't flash again, so fast crypto feeds don't blink constantly.
     store.applyQuote({ symbol: 'BTC-USD', type: 'CRYPTO', price: 99, changePercent: 0, timestamp: MONDAY_OPEN + 2 });
     await nextTick();
-    expect(box.find('.ring-red-500').exists()).toBe(false);
+    expect(box.find('.border-bad').exists()).toBe(false);
 
     vi.advanceTimersByTime(5_000);
     store.applyQuote({ symbol: 'BTC-USD', type: 'CRYPTO', price: 98, changePercent: 0, timestamp: MONDAY_OPEN + 3 });
     await nextTick();
-    expect(box.find('.ring-red-500').exists()).toBe(true);
+    expect(box.find('.border-bad').exists()).toBe(true);
   });
 });

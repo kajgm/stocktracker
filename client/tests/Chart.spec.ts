@@ -40,7 +40,7 @@ describe('Chart view', () => {
       expect.anything()
     );
     expect(wrapper.get('[data-testid="change"]').text()).toBe('-5.00%');
-    expect(wrapper.get('[data-testid="change"]').classes()).toContain('text-red-500');
+    expect(wrapper.get('[data-testid="change"]').classes()).toContain('text-bad');
   });
 
   it('reloads when the range changes', async () => {

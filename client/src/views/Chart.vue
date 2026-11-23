@@ -45,21 +45,20 @@ onBeforeUnmount(() => clearTimeout(idle));
 <template>
   <div class="flex h-full w-full flex-col p-2" @pointerdown="resetIdle">
     <header class="flex items-baseline gap-2">
-      <RouterLink to="/" class="text-2xl leading-none text-zinc-400" aria-label="Back to all tickers"
+      <RouterLink
+        to="/"
+        class="rounded-pill px-1 text-2xl leading-none text-muted hover:text-ink"
+        aria-label="Back to all tickers"
         >&lsaquo;</RouterLink
       >
-      <h1 class="text-2xl font-medium">{{ tickerId }}</h1>
-      <span
-        v-if="latestPrice"
-        class="text-2xl font-medium tabular-nums"
-        :class="up ? 'text-emerald-500' : 'text-red-500'"
-      >
+      <h1 class="text-xl text-ink-2">{{ tickerId }}</h1>
+      <span v-if="latestPrice" class="measured text-2xl text-ink">
         {{ formatPrice(latestPrice) }}
       </span>
       <span
         v-if="points.length > 1"
-        class="ml-auto text-lg font-medium tabular-nums"
-        :class="up ? 'text-emerald-500' : 'text-red-500'"
+        class="measured ml-auto text-lg"
+        :class="up ? 'text-ok' : 'text-bad'"
         data-testid="change"
       >
         {{ formatPercent(change.percent) }}
@@ -74,7 +73,7 @@ onBeforeUnmount(() => clearTimeout(idle));
         :format-price="formatPrice"
         :format-time="formatTime"
       />
-      <p v-else class="absolute inset-0 flex items-center justify-center text-center text-zinc-400">
+      <p v-else class="absolute inset-0 flex items-center justify-center text-center text-muted">
         <template v-if="state == 'loading'">Loading chart...</template>
         <template v-else-if="state == 'error'">Couldn't load the chart. Retrying...</template>
         <template v-else-if="type == 'STOCK'">No history yet. Stock charts fill in while the market is open.</template>
@@ -87,8 +86,8 @@ onBeforeUnmount(() => clearTimeout(idle));
         v-for="r in HISTORY_RANGES"
         :key="r"
         type="button"
-        class="rounded-md px-3 py-0.5 text-sm font-medium uppercase"
-        :class="r == range ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-400'"
+        class="h-8 min-w-12 rounded border px-3 text-sm font-medium transition-colors"
+        :class="r == range ? 'border-cool bg-cool-soft text-cool' : 'border-transparent text-muted hover:text-ink'"
         :aria-pressed="r == range"
         @click="range = r"
       >
