@@ -4,7 +4,9 @@ import { useTickerStore } from '@/store/ticker';
 import { now } from '@/helpers/now';
 import { closeLabel, isUsMarketOpen } from '@/helpers/market';
 import { errorHint, formatPercent, formatPrice, formatVolume } from '@/helpers/format';
-import type { TickerData, SizeInfo } from '@/types/types';
+import { useTickerHistory } from '@/composables/useTickerHistory';
+import type { HistoryRange } from '@/types/history';
+import type { TickerData, TickerType, SizeInfo } from '@/types/types';
 
 const { tickerId, tickerType, rLink } = defineProps<{
   tickerId: string;
@@ -37,6 +39,29 @@ const staleMinutes = computed(() => {
   return age > STALE_MS[ticker.value.type] ? Math.floor(age / 60_000) : 0;
 });
 const up = computed(() => ticker.value.dayPercentage >= 0);
+
+// One-day sparkline in the tile's spare height, drawn in a 100x100 box stretched to fit.
+const { points } = useTickerHistory(
+  computed<TickerType>(() => ticker.value.type),
+  computed(() => tickerId),
+  ref<HistoryRange>('1d'),
+  ticker
+);
+const spark = computed(() => {
+  const p = points.value;
+  if (p.length < 2) return '';
+  const prices = p.map((q) => q[1]);
+  const lo = Math.min(...prices);
+  const span = Math.max(...prices) - lo || 1;
+  const t0 = p[0][0];
+  const dt = p.at(-1)![0] - t0 || 1;
+  return p
+    .map(
+      ([t, v], i) =>
+        `${i ? 'L' : 'M'}${(((t - t0) / dt) * 100).toFixed(2)},${(100 - ((v - lo) / span) * 100).toFixed(2)}`
+    )
+    .join('');
+});
 
 const priceClass = computed(() => (closed.value ? 'text-ink-2' : 'text-ink'));
 const footnote = computed(() => {
@@ -108,6 +133,24 @@ const boxClass = computed(() => {
             <p class="measured leading-none tracking-tight" :class="[priceClass, sInfo.price, sInfo.padding]">
               {{ formatPrice(ticker.curPrice) }}
             </p>
+            <div v-if="spark" class="relative my-1 min-h-0 flex-1">
+              <svg
+                class="absolute inset-0 h-full w-full overflow-visible"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+                data-testid="spark"
+              >
+                <path
+                  :d="spark"
+                  fill="none"
+                  :style="{ stroke: up ? 'var(--color-ok)' : 'var(--color-bad)' }"
+                  stroke-width="1.5"
+                  stroke-linejoin="round"
+                  vector-effect="non-scaling-stroke"
+                />
+              </svg>
+            </div>
             <div class="mt-auto flex items-end justify-between gap-1">
               <span class="measured text-muted truncate" :class="sInfo.vol">{{ footnote }}</span>
               <span class="measured shrink-0" :class="[up ? 'text-ok' : 'text-bad', sInfo.percent]">
