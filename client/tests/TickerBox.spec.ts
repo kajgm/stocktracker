@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import { useTickerStore } from '@/store/ticker';
 import { now } from '@/helpers/now';
@@ -117,5 +117,32 @@ describe('TickerBox', () => {
     store.applyQuote({ symbol: 'BTC-USD', type: 'CRYPTO', price: 98, changePercent: 0, timestamp: MONDAY_OPEN + 3 });
     await nextTick();
     expect(box.find('.border-bad').exists()).toBe(true);
+  });
+
+  it('draws a one-day sparkline from the ticker history', async () => {
+    setNow(SATURDAY);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              points: [
+                [SATURDAY - 60_000, 100],
+                [SATURDAY, 110]
+              ]
+            })
+        })
+      )
+    );
+    const store = useTickerStore();
+    store.setTickers({ stock: ['AAPL'], crypto: [] });
+    store.applyQuote({ symbol: 'AAPL', type: 'STOCK', price: 110, changePercent: 1, timestamp: SATURDAY });
+    const box = mountBox('AAPL', 'STOCK');
+    await flushPromises();
+    expect(box.get('[data-testid="spark"] path').attributes('d')).toBe('M0.00,100.00L100.00,0.00');
+    vi.unstubAllGlobals();
   });
 });
